@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from card_manager import views as v
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('create_note/', v.create_note)
 ]
