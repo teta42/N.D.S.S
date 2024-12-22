@@ -18,8 +18,10 @@ class Note(models.Model):
         db_table = 'note'            # Имя таблицы в базе данных
 
     def save(self, *args, **kwargs):
-        key = self._create_note_id()
-        self.note_id = key
+        exist = Note.objects.filter(note_id=self.note_id).exists()
+        if not self.note_id:
+            key = self._create_note_id()
+            self.note_id = key
         
         super().save(*args, **kwargs)
         
