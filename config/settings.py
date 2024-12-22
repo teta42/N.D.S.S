@@ -56,7 +56,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'card_manager/templates/card_manager')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates/card_manager')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
