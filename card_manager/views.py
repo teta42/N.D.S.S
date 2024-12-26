@@ -29,6 +29,12 @@ def create_note(request):
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
 
 @ensure_csrf_cookie
+def read_note_html(request, note_id):
+    # Отображение HTML-страницы с заметкой
+    note = get_object_or_404(Note, note_id=note_id)
+    return render(request, 'read_note.html')
+
+@ensure_csrf_cookie
 def read_note(request, note_id):
     if request.method == 'GET':
         note = get_object_or_404(Note, note_id=note_id) 

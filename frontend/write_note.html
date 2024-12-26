@@ -24,6 +24,24 @@
             });
         }
 
+        function get_content(note_id) {
+            fetch(`http://127.0.0.1:8000/note/${note_id}/data/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Статус ошибки: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data)
+                document.getElementById('textInput').value = data.content;
+
+            })
+            .catch(error => {
+                console.error('Произошла ошибка: ', error);
+            });
+        }
+
         function getNoteIdFromUrl() {
             const urlParts = window.location.pathname.split('/'); // Разделяем URL на части
             const noteId = urlParts[urlParts.length - 3];
@@ -44,6 +62,11 @@
             }
             return cookieValue;
         }
+    
+        document.addEventListener("DOMContentLoaded", function() {
+            const note_id = getNoteIdFromUrl()
+            get_content(note_id);
+        });
     </script>
 </head>
 <body>

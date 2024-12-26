@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прочитать Записку</title>
+    <script>
+        function Read() {
+            const note_id = getNoteIdFromUrl();
+        
+            fetch(`http://127.0.0.1:8000/note/${note_id}/data/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Статус ошибки: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                insert_data(data);
+            })
+            .catch(error => {
+                console.error('Произошла ошибка: ', error);
+            });
+
+
+        }
+        
+        function insert_data(data) {
+            document.getElementById('content').innerText = data.content
+            document.getElementById('created_at').innerText = "Созданно в: \n" + data.created_at
+            document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
+        }
+
+        function getNoteIdFromUrl() {
+            const urlParts = window.location.pathname.split('/');
+            const noteId = urlParts[urlParts.length - 2];
+            return noteId;
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            Read();
+        });
+    </script>
+</head>
+<body>
+    <p id="content"></p>
+
+    <p id="created_at"></p>
+
+    <p id="mode"></p>
+</body>
+</html>

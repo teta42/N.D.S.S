@@ -21,6 +21,7 @@ from card_manager import views as v
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('create_note/', v.create_note),
-    path('note/<str:note_id>/', v.read_note),
+    path('note/<str:note_id>/', v.read_note_html),
+    path('note/<str:note_id>/data/', v.read_note), #TODO Заменить на нормальное название
     path('note/<str:note_id>/write/', v.write_note)
 ]
