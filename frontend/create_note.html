@@ -22,6 +22,7 @@
             .then(data => {
                 console.log('Успех:', data);
                 // Отображение note_id на странице
+                document.getElementById('noteIdDisplay').setAttribute('href', `http://127.0.0.1:8000/note/${data.note_id}/`)
                 document.getElementById('noteIdDisplay').innerText = 'ID записки: ' + data.note_id;
             })
             .catch((error) => {
@@ -62,6 +63,6 @@
 
     <button onclick="sendData()">Отправить</button>
 
-    <h2 id="noteIdDisplay"></h2> <!-- Элемент для отображения note_id -->
+    <a href="" id="noteIdDisplay"></a>
 </body>
 </html>
