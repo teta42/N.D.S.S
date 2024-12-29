@@ -11,7 +11,12 @@
             fetch(`http://127.0.0.1:8000/note/${note_id}/data/`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Статус ошибки: ' + response.status);
+                    if (response.status === 404) {
+                        window.location.replace("http://localhost:8000/page_404/");
+                    } else {
+                        throw new Error('Статус ошибки: ' + response.status);
+                    }
+                    
                 }
                 return response.json();
             })
@@ -29,6 +34,7 @@
             document.getElementById('content').innerText = data.content
             document.getElementById('created_at').innerText = "Созданно в: \n" + data.created_at
             document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
+            document.getElementById('dead_line').innerText= "Записка жива до: \n" + data.dead_line
         }
 
         function getNoteIdFromUrl() {
@@ -48,5 +54,7 @@
     <p id="created_at"></p>
 
     <p id="mode"></p>
+
+    <p id="dead_line"></p>
 </body>
 </html>

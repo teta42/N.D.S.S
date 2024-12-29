@@ -8,6 +8,7 @@
         function sendData() {
             const inputText = document.getElementById('textInput').value;
             const mode = document.querySelector('input[name="mode"]:checked').value;
+            const dead_line = document.getElementById('datetimeInput').value;
             const csrftoken = getCookie('csrftoken');
 
             fetch('http://127.0.0.1:8000/create_note/', {
@@ -16,7 +17,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken
                 },
-                body: JSON.stringify({ content: inputText, read_only: mode })
+                body: JSON.stringify({ content: inputText, read_only: mode, dead_line: dead_line })
             })
             .then(response => response.json())
             .then(data => {
@@ -51,6 +52,10 @@
     <label for="textInput">Введите текст:</label>
     <input type="text" id="textInput" required>
 
+    <label for="datetimeInput">Введите дату и время:</label>
+    <input type="datetime-local" id="datetimeInput" required>
+
+
     <fieldset>
         <legend>Выберите режим:</legend>
         <label>
@@ -66,3 +71,4 @@
     <a href="" id="noteIdDisplay"></a>
 </body>
 </html>
+

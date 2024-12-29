@@ -5,8 +5,9 @@ class Note(models.Model):
     note_id = models.CharField(max_length=7, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
-    read_only = models.BooleanField(default=True)   
+    read_only = models.BooleanField(default=True)  
     # 1 = чтение ; 0 = чтение и запись
+    dead_line = models.DateTimeField()
 
     def __str__(self):
         return self.note_id     # Возвращает индефикатор заметки при выводе

@@ -3,7 +3,10 @@ from django.shortcuts import render
 import json
 from .models import Note
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
+from datetime import datetime
+import pytz
 
 @ensure_csrf_cookie
 def create_note(request):
@@ -14,12 +17,13 @@ def create_note(request):
         # Достаём нужные данные
         note_content = data.get('content')
         read_only = data.get('read_only')
+        dead_line = data.get('dead_line')
 
         # Приводим данные к нормальному виду
         mode = (read_only == "read") # Проверка на истеность выражения
         
         # Создаём объект 
-        note = Note(content=note_content, read_only=mode)
+        note = Note(content=note_content, read_only=mode, dead_line=dead_line)
         note.save()
         
         return JsonResponse({'note_id': str(note.note_id)})
@@ -39,11 +43,23 @@ def read_note(request, note_id):
     if request.method == 'GET':
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
+        
+        now = datetime.now(pytz.timezone('Asia/Yekaterinburg'))
+        # Получаю нынешную дату и время в нужном формате
+        
+        dead_line = pytz.timezone('Asia/Yekaterinburg').localize(note.dead_line)
+        
+        
+        if now >= dead_line: # Проверяю что заметка НЕ жива
+            note.delete()
+            return JsonResponse({'error': 'page not found'},status=404)
+        
         mod = 'read' if note.read_only else 'write'
         return JsonResponse({
             'created_at': note.created_at,
             'content': note.content,
-            'mod': mod
+            'mod': mod,
+            'dead_line': note.dead_line,
         }, status=200)
     else:
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
@@ -67,5 +83,11 @@ def write_note(request, note_id):
         return JsonResponse({'status': 200}, status=200)
     elif request.method == 'GET':
         return render(request, 'write_note.html')
+    else:
+        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+    
+def page_404(request):
+    if request.method == "GET":
+        return render(request, '404.html')
     else:
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
