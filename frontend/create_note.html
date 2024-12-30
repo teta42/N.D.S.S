@@ -8,7 +8,8 @@
         function sendData() {
             const inputText = document.getElementById('textInput').value;
             const mode = document.querySelector('input[name="mode"]:checked').value;
-            const dead_line = document.getElementById('datetimeInput').value;
+            const date = new Date(document.getElementById('datetimeInput').value);
+            const dead_line = date.toISOString();
             const csrftoken = getCookie('csrftoken');
 
             fetch('http://127.0.0.1:8000/create_note/', {

@@ -35,6 +35,8 @@
             document.getElementById('created_at').innerText = "Созданно в: \n" + data.created_at
             document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
             document.getElementById('dead_line').innerText= "Записка жива до: \n" + data.dead_line
+
+            console.log(`dl: ${data.dead_line}\n ca: ${data.created_at}`)
         }
 
         function getNoteIdFromUrl() {
