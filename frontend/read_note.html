@@ -31,12 +31,30 @@
         }
         
         function insert_data(data) {
-            document.getElementById('content').innerText = data.content
-            document.getElementById('created_at').innerText = "Созданно в: \n" + data.created_at
-            document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
-            document.getElementById('dead_line').innerText= "Записка жива до: \n" + data.dead_line
+            // Сохранение ссылок на элементы
+            const contentElement = document.getElementById('content');
+            const createdAtElement = document.getElementById('created_at');
+            const modeElement = document.getElementById('mode');
+            const deadLineElement = document.getElementById('dead_line');
+        
+            // Проверка наличия данных
+            if (!data || !data.content || !data.created_at || !data.dead_line || !data.mod) {
+                console.error("Недостаточно данных для отображения.");
+                return;
+            }
+        
+            // Обновление содержимого
+            contentElement.innerText = data.content;
+        
+            const ca = new Date(data.created_at + 'Z'); // Добавил Z для указания часового пояса UTC
+            createdAtElement.innerText = `Создано в: \n${ca.toLocaleString()}`;
+        
+            modeElement.innerText = `Записка сделана только для: \n${data.mod}`;
+        
+            const dl = new Date(data.dead_line + 'Z'); // Добавил Z для указания часового пояса UTC
+            deadLineElement.innerText = `Записка жива до: \n${dl.toLocaleString()}`;
         }
-
+        
         function getNoteIdFromUrl() {
             const urlParts = window.location.pathname.split('/');
             const noteId = urlParts[urlParts.length - 2];

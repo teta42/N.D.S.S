@@ -42,6 +42,10 @@ def read_note(request, note_id):
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
         
+        if datetime.now() >= note.dead_line:
+            note.delete()
+            return JsonResponse({'error': 'Page not found'}, status=404)
+        
         mod = 'read' if note.read_only else 'write'
         return JsonResponse({
             'created_at': note.created_at,
