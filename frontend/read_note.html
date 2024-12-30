@@ -32,11 +32,14 @@
         
         function insert_data(data) {
             document.getElementById('content').innerText = data.content
-            document.getElementById('created_at').innerText = "Созданно в: \n" + data.created_at
+            const ca = new Date(data.created_at += 'Z');
+            document.getElementById('created_at').innerText = "Созданно в: \n" + ca.toLocaleString()
             document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
-            document.getElementById('dead_line').innerText= "Записка жива до: \n" + data.dead_line
+            const dl = new Date(data.dead_line += 'Z');
+            document.getElementById('dead_line').innerText= "Записка жива до: \n" + dl.toLocaleString()
 
             console.log(`dl: ${data.dead_line}\n ca: ${data.created_at}`)
+            console.log(`ls_dl ${dl.toLocaleString()}\n ls_ca: ${ca.toLocaleString()}`)
         }
 
         function getNoteIdFromUrl() {
