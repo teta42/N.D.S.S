@@ -31,17 +31,30 @@
         }
         
         function insert_data(data) {
-            document.getElementById('content').innerText = data.content
-            const ca = new Date(data.created_at += 'Z');
-            document.getElementById('created_at').innerText = "Созданно в: \n" + ca.toLocaleString()
-            document.getElementById('mode').innerText = "Записка сделанна только для: \n" + data.mod
-            const dl = new Date(data.dead_line += 'Z');
-            document.getElementById('dead_line').innerText= "Записка жива до: \n" + dl.toLocaleString()
-
-            console.log(`dl: ${data.dead_line}\n ca: ${data.created_at}`)
-            console.log(`ls_dl ${dl.toLocaleString()}\n ls_ca: ${ca.toLocaleString()}`)
+            // Сохранение ссылок на элементы
+            const contentElement = document.getElementById('content');
+            const createdAtElement = document.getElementById('created_at');
+            const modeElement = document.getElementById('mode');
+            const deadLineElement = document.getElementById('dead_line');
+        
+            // Проверка наличия данных
+            if (!data || !data.content || !data.created_at || !data.dead_line || !data.mod) {
+                console.error("Недостаточно данных для отображения.");
+                return;
+            }
+        
+            // Обновление содержимого
+            contentElement.innerText = data.content;
+        
+            const ca = new Date(data.created_at + 'Z'); // Добавил Z для указания часового пояса UTC
+            createdAtElement.innerText = `Создано в: \n${ca.toLocaleString()}`;
+        
+            modeElement.innerText = `Записка сделана только для: \n${data.mod}`;
+        
+            const dl = new Date(data.dead_line + 'Z'); // Добавил Z для указания часового пояса UTC
+            deadLineElement.innerText = `Записка жива до: \n${dl.toLocaleString()}`;
         }
-
+        
         function getNoteIdFromUrl() {
             const urlParts = window.location.pathname.split('/');
             const noteId = urlParts[urlParts.length - 2];
