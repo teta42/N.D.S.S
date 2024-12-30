@@ -16,7 +16,6 @@ def create_note(request):
         note_content = data.get('content')
         read_only = data.get('read_only')
         dead_line = data.get('dead_line')
-        print(f"приём {dead_line}")
 
         # Приводим данные к нормальному виду
         mode = (read_only == "read") # Проверка на истеность выражения
@@ -43,7 +42,9 @@ def read_note(request, note_id):
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
         
-        print(f'отправка {note.dead_line}')
+        if datetime.now() >= note.dead_line:
+            note.delete()
+            return JsonResponse({'error': 'Page not found'}, status=404)
         
         mod = 'read' if note.read_only else 'write'
         return JsonResponse({
