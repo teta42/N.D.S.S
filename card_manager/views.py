@@ -3,10 +3,8 @@ from django.shortcuts import render
 import json
 from .models import Note
 from django.shortcuts import get_object_or_404
-from django.http import Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import datetime
-import pytz
 
 @ensure_csrf_cookie
 def create_note(request):
@@ -43,16 +41,6 @@ def read_note(request, note_id):
     if request.method == 'GET':
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
-        
-        now = datetime.now(pytz.timezone('Asia/Yekaterinburg'))
-        # Получаю нынешную дату и время в нужном формате
-        
-        dead_line = pytz.timezone('Asia/Yekaterinburg').localize(note.dead_line)
-        
-        
-        if now >= dead_line: # Проверяю что заметка НЕ жива
-            note.delete()
-            return JsonResponse({'error': 'page not found'},status=404)
         
         mod = 'read' if note.read_only else 'write'
         return JsonResponse({
