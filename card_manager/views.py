@@ -4,7 +4,7 @@ import json
 from .models import Note
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
-from datetime import datetime
+from check_life import is_valid
 
 @ensure_csrf_cookie
 def create_note(request):
@@ -42,17 +42,21 @@ def read_note(request, note_id):
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
         
-        if datetime.now() >= note.dead_line:
-            note.delete()
+        if not is_valid(note):
             return JsonResponse({'error': 'Page not found'}, status=404)
         
         mod = 'read' if note.read_only else 'write'
-        return JsonResponse({
+        
+        # Создаем словарь с данными
+        response_data = {
             'created_at': note.created_at,
             'content': note.content,
             'mod': mod,
             'dead_line': note.dead_line,
-        }, status=200)
+        }
+
+        # Возвращаем JsonResponse с данными
+        return JsonResponse(response_data, status=200)
     else:
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
 
