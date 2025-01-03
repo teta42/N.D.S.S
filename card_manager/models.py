@@ -9,7 +9,7 @@ class Note(models.Model):
     # 1 = чтение ; 0 = чтение и запись
     dead_line = models.DateTimeField()
     read_count = models.PositiveIntegerField(default=0)
-    deletion_on_first_reading = models.BooleanField(default=0)
+    deletion_on_first_reading = models.BooleanField(default=False)
 
     def __str__(self):
         return self.note_id     # Возвращает индефикатор заметки при выводе
