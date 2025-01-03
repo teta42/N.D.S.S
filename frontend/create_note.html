@@ -8,6 +8,7 @@
         function sendData() {
             const inputText = document.getElementById('textInput').value;
             const mode = document.querySelector('input[name="mode"]:checked').value;
+            const one_read = document.querySelector('input[name="one-read"]:checked').value;
             const date = new Date(document.getElementById('datetimeInput').value);
             const dead_line = date.toISOString();
             const csrftoken = getCookie('csrftoken');
@@ -18,7 +19,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken
                 },
-                body: JSON.stringify({ content: inputText, read_only: mode, dead_line: dead_line })
+                body: JSON.stringify({ content: inputText, read_only: mode, dead_line: dead_line, one_read: one_read })
             })
             .then(response => response.json())
             .then(data => {
@@ -64,6 +65,16 @@
         </label>
         <label>
             <input type="radio" name="mode" value="write"> Запись
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Удалять при первом прочтении?:</legend>
+        <label>
+            <input type="radio" name="one-read" value="True" checked> Да
+        </label>
+        <label>
+            <input type="radio" name="one-read" value="False"> Нет
         </label>
     </fieldset>
 
