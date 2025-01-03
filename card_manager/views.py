@@ -16,12 +16,13 @@ def create_note(request):
         note_content = data.get('content')
         read_only = data.get('read_only')
         dead_line = data.get('dead_line')
+        one_read = data.get('one_read')
 
         # Приводим данные к нормальному виду
         mode = (read_only == "read") # Проверка на истеность выражения
         
         # Создаём объект 
-        note = Note(content=note_content, read_only=mode, dead_line=dead_line)
+        note = Note(content=note_content, read_only=mode, dead_line=dead_line, deletion_on_first_reading=one_read)
         note.save()
         
         return JsonResponse({'note_id': str(note.note_id)})

@@ -5,5 +5,6 @@ def is_valid(note: object) -> bool:
             note.delete()
             return False
     elif note.deletion_on_first_reading == True and note.read_count > 0:
+            note.delete()
             return False
     return True
