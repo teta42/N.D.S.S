@@ -55,6 +55,9 @@ def read_note(request, note_id):
             'dead_line': note.dead_line,
         }
 
+        # Увеличиваем счётчик прочтений на 1
+        note.increase_reads()
+        
         # Возвращаем JsonResponse с данными
         return JsonResponse(response_data, status=200)
     else:
