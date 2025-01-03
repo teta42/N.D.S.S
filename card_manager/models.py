@@ -8,6 +8,8 @@ class Note(models.Model):
     read_only = models.BooleanField(default=True)  
     # 1 = чтение ; 0 = чтение и запись
     dead_line = models.DateTimeField()
+    read_count = models.PositiveIntegerField(default=0)
+    deletion_on_first_reading = models.BooleanField(default=False)
 
     def __str__(self):
         return self.note_id     # Возвращает индефикатор заметки при выводе
@@ -34,3 +36,7 @@ class Note(models.Model):
             if if_key == False:
                 return key
             print("Созданный ключ уже есть, пересоздаю...")
+            
+    def increase_reads(self):
+        self.read_count += 1
+        self.save()
