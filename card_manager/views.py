@@ -6,6 +6,9 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from check_life import is_valid
 
+def home(request):
+    return render(request, 'home.html')
+
 @ensure_csrf_cookie
 def create_note(request):
     if request.method == 'POST':

@@ -21,6 +21,7 @@ from card_manager import views as v
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('page_404/', v.page_404),
+    path('', v.home),
     path('note/', include('card_manager.urls')),
     path('account/', include('service_accounts.urls')),
 ]
