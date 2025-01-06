@@ -4,95 +4,117 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from service_accounts.models import Password_Blocker
 from django.contrib.auth import login, authenticate, logout
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 def registration(request):
     if request.method == 'GET':
         return render(request, 'reg.html')
+    
     elif request.method == 'POST':
-        data = json.loads(request.body)
-        password = data['password']
-        username = data['login']
-        email = data['email']
-        rememberMe = data['rememberMe']
+        try:
+            data = json.loads(request.body)
+            username = data.get('login')
+            email = data.get('email')
+            password = data.get('password')
+            remember_me = data.get('rememberMe', False)
+
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({"status": "login_not_unique"}, status=400)
+
+            user = User.objects.create_user(username=username, email=email, password=password)
+            login(request, user)
+
+            request.session.set_expiry(0 if not remember_me else None)
+
+            return JsonResponse({"status": "ok"})
         
-        uniqueness = User.objects.filter(username=username).count()
-        
-        if uniqueness < 1: # Проверка уникальности "логина"
-            user = User.objects.create_user(username=username, email=email, password=password) # Регестрация пользователя
-            if user is not None:
-                login(request, user)
-                if rememberMe == False:
-                    request.session.set_expiry(0)
-                return JsonResponse({"status": "ok"})
-            return JsonResponse({"status": "not ok"})
-        else:
-            return JsonResponse({"status": "login_not_unique"})
+        except json.JSONDecodeError:
+            print("error invalid_json")
+            return JsonResponse({"error": "invalid_json"}, status=400)
+        except Exception as e:
+            print(f"error {str(e)}")
+            return JsonResponse({"error": "error"}, status=500)
+
+    return JsonResponse({"error": "method_not_allowed"}, status=405)
 
 def authorization(request):
     if request.method == 'GET':
         return render(request, 'aut.html')
+
     elif request.method == 'POST':
-        data = json.loads(request.body)
-        username = data['login']
-        password = data['password']
-        rememberMe = data['rememberMe']
-        
-        user_is = User.objects.filter(username=username).count()
-        
-        if user_is == 1:
-            user = User.objects.get(username=username)
+        try:
+            # Получаем данные из тела запроса
+            request_data = json.loads(request.body)
+            username = request_data.get('login')
+            password = request_data.get('password')
+            remember_user = request_data.get('rememberMe', False)
+
+            user = User.objects.filter(username=username).first()
+            if not user:
+                return JsonResponse({"error": "no_such_account_exists"}, status=404)
+
             pb = Password_Blocker.objects.get(user=user.pk)
-            if datetime.now(timezone.utc) > pb.unlock_date:
-                if user.check_password(password):
-                    user = authenticate(request, username=username, password=password)
-                    login(request, user)
-                    if rememberMe == False:
-                        request.session.set_expiry(0)
-                    return JsonResponse({"status": "ok"})
-                else:
-                    if pb.incorrect_password_counter < 4:
-                        pb.incorrect_password_counter += 1
-                        pb.save()
-                        return JsonResponse({"status": "wrong_password"})
-                    elif pb.incorrect_password_counter >= 4:
-                        pb.unlock_date = datetime.now(timezone.utc) + timedelta(hours=pb.next_blocking_for_how_long)
-                        pb.increase_next_lock()
-                        pb.incorrect_password_counter = 0
-                        pb.save()
-                        return JsonResponse({"status": "account_blocked", "unlocked": f"{pb.unlock_date-datetime.now(timezone.utc)}"})
+
+            if datetime.now() <= pb.unlock_date:
+                return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
+
+            if user.check_password(password):
+                user = authenticate(request, username=username, password=password)
+                login(request, user)
+                request.session.set_expiry(0 if not remember_user else None)
+                return JsonResponse({"status": "ok"}, status=200)
             else:
-                return JsonResponse({"status": "account_blocked", "unlocked": f"{pb.unlock_date-datetime.now(timezone.utc)}"})
-        else:
-            return JsonResponse({"status": "no_such_account_exists"})
+                pb.incorrect_password_counter += 1
+                if pb.incorrect_password_counter >= 4:
+                    pb.unlock_date = datetime.now() + timedelta(hours=pb.next_blocking_for_how_long)
+                    pb.incorrect_password_counter = 0
+                    pb.save()
+                    return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
+                pb.save()
+                return JsonResponse({"error": "wrong_password"}, status=401)
+
+        except json.JSONDecodeError:
+            print("error invalid_json")
+            return JsonResponse({"error": "invalid_json"}, status=401)
+        except Exception as e:
+            print(f"error {str(e)}")
+            return JsonResponse({"error": "error"}, status=500)
+        
+    return JsonResponse({"error": "method_not_allowed"}, status=405)
 
 def change(request):
     if request.method == 'GET':
         return render(request, 'cha.html')
     elif request.method == 'PUT':
         data = json.loads(request.body)
-        password = data['password']
-        username = data['login']
+        password = data.get('password')
+        username = data.get('login')
         
         user = User.objects.get(pk=request.user.id)
+        
         if password is not None:
-            user.set_password(password)  # Соответствующий набор метода set_password
+            user.set_password(password)
         if username is not None:
             user.username = username
+            
         user.save()
         login(request, user)
-        return JsonResponse({"status": "ok"})
+        
+        return JsonResponse({"status": "fully completed"}, status=200)
+    
+    return JsonResponse({"error": "method_not_allowed"}, status=405)
 
 def delete(request):
     if request.user.is_authenticated:
         user = User.objects.get(pk=request.user.id)
         user.delete()
-        return JsonResponse({"status": "ok"})
+        return JsonResponse({"status": "fully completed"}, status=200)
     
-    return JsonResponse({"status": "not ok"})
+    return JsonResponse({"error": "you are a shapeshifter"}, status=401)
 
 def out(request):
     if request.user.is_authenticated:
         logout(request=request)
-        return JsonResponse({"status": "ok"})
-    return JsonResponse({"status": "not ok"})
+        return JsonResponse({"status": "fully completed"}, status=200)
+    
+    return JsonResponse({"error": "you are a shapeshifter"}, status=401)
