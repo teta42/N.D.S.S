@@ -120,7 +120,7 @@
         </div>
         <button id="ok-button">ОК</button>
         <div id="block-message" class="error-message"></div>
-        <p><a href="https://temporally-legible-crow.cloudpub.ru/account/registration/" id="registration-link" class="link">Регистрация</a></p>
+        <p><a href="http://127.0.0.1:8000/account/registration/" id="registration-link" class="link">Регистрация</a></p>
         <div class="icons">
             <div class="translate-icon">🌐</div>
             <div class="theme-icon">🌞</div>
@@ -154,7 +154,7 @@
             }
 
             if (valid) {
-                fetch('https://temporally-legible-crow.cloudpub.ru/account/authorization/', {
+                fetch('http://127.0.0.1:8000/account/authorization/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -165,7 +165,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'ok') {
-                        window.location.href = 'https://temporally-legible-crow.cloudpub.ru/';
+                        window.location.href = 'http://127.0.0.1:8000/';
                     } else if (data.status === 'wrong_password') {
                         document.getElementById('password-error').textContent = 'Incorrect password';
                     } else if (data.status === 'account_blocked') {
@@ -200,7 +200,7 @@
         });
 
         document.querySelector('.bottom-square').addEventListener('mouseenter', function() {
-            window.location.href = 'https://youtu.be/dQw4w9WgXcQ?si=SM30PZ4malVQ1pbc';
+            window.location.href = 'http://youtu.be/dQw4w9WgXcQ?si=SM30PZ4malVQ1pbc';
         });
         function getCookie(name) {
             let cookieValue = null;

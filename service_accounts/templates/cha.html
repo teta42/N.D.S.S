@@ -31,7 +31,7 @@
 
       const data = { login: login, password: password };
 
-      fetch('https://temporally-legible-crow.cloudpub.ru/account/change/', {
+      fetch('http://127.0.0.1:8000/account/change/', {
         method: 'PUT',
         headers: {
           'X-CSRFToken': getCookie('csrftoken')
@@ -46,14 +46,14 @@
           message.textContent = 'Данные изменены';
           document.body.appendChild(message);
           setTimeout(function() {
-            window.location.href = 'https://temporally-legible-crow.cloudpub.ru/';
+            window.location.href = 'http://127.0.0.1:8000/';
           }, 5000);
         }
       });
     }
 
     function logout() {
-      window.location.href = 'https://temporally-legible-crow.cloudpub.ru/';
+      window.location.href = 'http://127.0.0.1:8000/';
     }
     function getCookie(name) {
       let cookieValue = null;

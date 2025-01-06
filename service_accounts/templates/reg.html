@@ -38,7 +38,7 @@
           rememberMe: rememberMe
         };
 
-        fetch('https://temporally-legible-crow.cloudpub.ru/account/registration/', {
+        fetch('http://127.0.0.1:8000/account/registration/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -49,7 +49,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.status === "ok") {
-            window.location.href = "https://temporally-legible-crow.cloudpub.ru/";
+            window.location.href = "http://127.0.0.1:8000/";
           }
           console.log(data);
         })
