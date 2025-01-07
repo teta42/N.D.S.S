@@ -1,7 +1,9 @@
 from django.db import models
 from key_gen import generate_random_key as grk
+from django.contrib.auth.models import User
 
 class Note(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     note_id = models.CharField(max_length=7, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
