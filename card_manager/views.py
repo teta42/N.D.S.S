@@ -31,7 +31,7 @@ def create_note(request):
             note = Note(user=user,
                         content=note_content, read_only=mode, 
                         dead_line=dead_line, deletion_on_first_reading=one_read)
-            note.save()
+            note.save(we_create=True)
             
             return JsonResponse({'note_id': str(note.note_id)})
         else:
@@ -40,7 +40,7 @@ def create_note(request):
             note = Note(user=user,
                         content=note_content, read_only=mode, 
                         dead_line=dead_line, deletion_on_first_reading=one_read)
-            note.save()
+            note.save(we_create=True)
             
             return JsonResponse({'note_id': str(note.note_id)})
         
@@ -96,7 +96,7 @@ def write_note(request, note_id):
         
         # Изменяем модель
         note.content = new_content
-        note.save()
+        note.save(we_create=False)
         
         return JsonResponse({'status': 200}, status=200)
     elif request.method == 'GET':

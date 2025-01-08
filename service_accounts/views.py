@@ -1,8 +1,7 @@
 from django.shortcuts import render
 import json
 from django.http import JsonResponse
-from django.contrib.auth.models import User
-from service_accounts.models import Password_Blocker
+from service_accounts.models import CustomUser
 from django.contrib.auth import login, authenticate, logout
 from datetime import datetime, timedelta
 
@@ -18,10 +17,12 @@ def registration(request):
             password = data.get('password')
             remember_me = data.get('rememberMe', False)
 
-            if User.objects.filter(username=username).exists():
+            if CustomUser.objects.filter(username=username).exists():
                 return JsonResponse({"status": "login_not_unique"}, status=400)
-
-            user = User.objects.create_user(username=username, email=email, password=password)
+            
+            user = CustomUser(username=username, email=email, password=password)
+            user.save(we_create=True)
+            
             login(request, user)
 
             request.session.set_expiry(0 if not remember_me else None)
@@ -49,11 +50,11 @@ def authorization(request):
             password = request_data.get('password')
             remember_user = request_data.get('rememberMe', False)
 
-            user = User.objects.filter(username=username).first()
+            user = CustomUser.objects.filter(username=username).first()
             if not user:
                 return JsonResponse({"error": "no_such_account_exists"}, status=404)
 
-            pb = Password_Blocker.objects.get(user=user.pk)
+            pb = user.pb
 
             if datetime.now() <= pb.unlock_date:
                 return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
@@ -90,14 +91,14 @@ def change(request):
         password = data.get('password')
         username = data.get('login')
         
-        user = User.objects.get(pk=request.user.id)
+        user = CustomUser.objects.get(pk=request.user.id)
         
         if password is not None:
             user.set_password(password)
         if username is not None:
             user.username = username
             
-        user.save()
+        user.save(we_create=False)
         login(request, user)
         
         return JsonResponse({"status": "fully completed"}, status=200)
@@ -106,7 +107,7 @@ def change(request):
 
 def delete(request):
     if request.user.is_authenticated:
-        user = User.objects.get(pk=request.user.id)
+        user = CustomUser.objects.get(pk=request.user.id)
         user.delete()
         return JsonResponse({"status": "fully completed"}, status=200)
     

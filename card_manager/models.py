@@ -1,9 +1,8 @@
 from django.db import models
-from key_gen import generate_random_key as grk
-from django.contrib.auth.models import User
+from service_accounts.models import CustomUser
 
 class Note(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
@@ -22,22 +21,12 @@ class Note(models.Model):
         verbose_name_plural = 'Заметки'  # Человекочитаемое имя модели во множественном числе
         db_table = 'note'            # Имя таблицы в базе данных
 
-    def save(self, *args, **kwargs):
-        exist = Note.objects.filter(note_id=self.note_id).exists()
-        if not self.note_id:
-            key = self._create_note_id()
-            self.note_id = key
+    def save(self, *args, we_create:bool=True ,**kwargs):
+        if we_create: # True создаём, False обновляем
+            from key_check import create_id
+            self.note_id = create_id()
         
         super().save(*args, **kwargs)
-        
-    def _create_note_id(self):
-        while True:
-            key = grk(7) # генерация ключа длиной в 7
-            if_key = Note.objects.filter(note_id=key).exists()
-            # Проверка есть ли уже такой ключ
-            if if_key == False:
-                return key
-            print("Созданный ключ уже есть, пересоздаю...")
             
     def increase_reads(self):
         self.read_count += 1
