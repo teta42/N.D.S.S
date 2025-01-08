@@ -30,4 +30,4 @@ class Note(models.Model):
             
     def increase_reads(self):
         self.read_count += 1
-        self.save()
+        self.save(we_create=False)

@@ -5,7 +5,7 @@ from .models import Note
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from check_life import is_valid
-from django.contrib.auth.models import User
+from service_accounts.customuser import CustomUser
 
 def home(request):
     return render(request, 'home.html')
@@ -26,7 +26,7 @@ def create_note(request):
         mode = (read_only == "read") # Проверка на истеность выражения
             
         if request.user.is_authenticated: 
-            user = User.objects.get(id=request.user.pk)
+            user = CustomUser.objects.get(user_id=request.user.pk)
             # Создаём объект
             note = Note(user=user,
                         content=note_content, read_only=mode, 
@@ -35,7 +35,7 @@ def create_note(request):
             
             return JsonResponse({'note_id': str(note.note_id)})
         else:
-            user = User.objects.get(username='root')
+            user = CustomUser.objects.get(username='root')
             # Создаём объект
             note = Note(user=user,
                         content=note_content, read_only=mode, 
