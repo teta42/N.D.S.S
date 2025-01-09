@@ -21,7 +21,7 @@ def registration(request):
                 return JsonResponse({"status": "login_not_unique"}, status=400)
             
             user = CustomUser(username=username, email=email, password=password)
-            user.save(we_create=True)
+            user.save(we_create=True) #TODO Переделать на использование менеджера
             
             login(request, user)
 
@@ -91,7 +91,7 @@ def change(request):
         password = data.get('password')
         username = data.get('login')
         
-        user = CustomUser.objects.get(pk=request.user.id)
+        user = CustomUser.objects.get(pk=request.user.user_id)
         
         if password is not None:
             user.set_password(password)
@@ -107,7 +107,7 @@ def change(request):
 
 def delete(request):
     if request.user.is_authenticated:
-        user = CustomUser.objects.get(pk=request.user.id)
+        user = CustomUser.objects.get(pk=request.user.user_id)
         user.delete()
         return JsonResponse({"status": "fully completed"}, status=200)
     

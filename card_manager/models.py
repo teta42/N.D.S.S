@@ -1,6 +1,8 @@
 from django.db import models
 from service_accounts.models import CustomUser
 
+#TODO Сделать менеджер, как для пользователя
+
 class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
