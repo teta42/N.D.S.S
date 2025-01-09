@@ -5,6 +5,10 @@ from .models import Note
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from check_life import is_valid
+from service_accounts.customuser import CustomUser
+
+def home(request):
+    return render(request, 'home.html')
 
 @ensure_csrf_cookie
 def create_note(request):
@@ -20,12 +24,26 @@ def create_note(request):
 
         # Приводим данные к нормальному виду
         mode = (read_only == "read") # Проверка на истеность выражения
+            
+        if request.user.is_authenticated: 
+            user = CustomUser.objects.get(user_id=request.user.pk)
+            # Создаём объект
+            note = Note(user=user,
+                        content=note_content, read_only=mode, 
+                        dead_line=dead_line, deletion_on_first_reading=one_read)
+            note.save(we_create=True)
+            
+            return JsonResponse({'note_id': str(note.note_id)})
+        else:
+            user = CustomUser.objects.get(username='root')
+            # Создаём объект
+            note = Note(user=user,
+                        content=note_content, read_only=mode, 
+                        dead_line=dead_line, deletion_on_first_reading=one_read)
+            note.save(we_create=True)
+            
+            return JsonResponse({'note_id': str(note.note_id)})
         
-        # Создаём объект 
-        note = Note(content=note_content, read_only=mode, dead_line=dead_line, deletion_on_first_reading=one_read)
-        note.save()
-        
-        return JsonResponse({'note_id': str(note.note_id)})
     elif request.method == 'GET':
         return render(request, 'create_note.html')
     else:
@@ -78,7 +96,7 @@ def write_note(request, note_id):
         
         # Изменяем модель
         note.content = new_content
-        note.save()
+        note.save(we_create=False)
         
         return JsonResponse({'status': 200}, status=200)
     elif request.method == 'GET':

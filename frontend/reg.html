@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Страница регистрации</title>
+  <style>
+    .error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Страница регистрации</h1>
+  <form id="registrationForm">
+    <label for="login">Логин:</label>
+    <input type="text" id="login" required><br>
+    <span id="loginError" class="error-message" style="display: none;">Логин не уникален</span><br><br>
+    <label for="password">Пароль:</label>
+    <input type="password" id="password" required><br><br>
+    <label for="email">Email:</label>
+    <input type="email" id="email" required><br><br>
+    <label for="rememberMe">Запомнить меня:</label>
+    <input type="checkbox" id="rememberMe" name="rememberMe" checked><br><br>
+    <input type="button" value="Зарегистрироваться" onclick="submitRegistration()">
+  </form>
+
+  <script>
+    function submitRegistration() {
+      var login = document.getElementById('login').value;
+      var password = document.getElementById('password').value;
+      var email = document.getElementById('email').value;
+      var rememberMe = document.getElementById('rememberMe').checked;
+
+      if (login && password && email) {
+        var data = {
+          login: login,
+          password: password,
+          email: email,
+          rememberMe: rememberMe
+        };
+
+        fetch('http://127.0.0.1:8000/account/registration/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "ok") {
+            window.location.href = "http://127.0.0.1:8000/";
+          }
+          console.log(data);
+        })
+        .catch(error => console.error('Error:', error));
+      } else {
+        alert('Пожалуйста, заполните все поля.');
+      }
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+  </script>
+</body>
+</html>

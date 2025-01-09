@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'card_manager',
+    'service_accounts',
     'corsheaders',
 ]
 
@@ -141,3 +142,5 @@ CSRF_COOKIE_SECURE = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
 ]
+
+AUTH_USER_MODEL = 'service_accounts.CustomUser'
