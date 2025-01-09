@@ -7,4 +7,4 @@ def create_or_update_password_blocker(sender, instance, created, **kwargs):
     if created:
         Password_Blocker.objects.create(user=instance)
     else:
-        instance.password_blocker.save()
+        instance.pb.save()
