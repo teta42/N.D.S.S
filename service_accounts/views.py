@@ -48,7 +48,9 @@ def authorization(request):
             username = request_data.get('login')
             password = request_data.get('password')
             remember_user = request_data.get('rememberMe', False)
-
+            
+            #TODO Сделать в виде отдельного класса
+            #region
             user = CustomUser.objects.filter(username=username).first()
             if not user:
                 return JsonResponse({"error": "no_such_account_exists"}, status=404)
@@ -72,6 +74,7 @@ def authorization(request):
                     return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
                 pb.save()
                 return JsonResponse({"error": "wrong_password"}, status=401)
+            #endregion
 
         except json.JSONDecodeError:
             print("error invalid_json")
