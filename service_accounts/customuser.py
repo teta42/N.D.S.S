@@ -30,15 +30,6 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
-    def save(self, *args, we_create:bool=False ,**kwargs):
-        if we_create: # True создаём, False обновляем
-            from key_check import create_id
-            self.user_id = create_id()
-        
-            self.set_password(self.password)
-        
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.username
     

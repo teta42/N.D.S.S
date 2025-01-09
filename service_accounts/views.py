@@ -20,8 +20,7 @@ def registration(request):
             if CustomUser.objects.filter(username=username).exists():
                 return JsonResponse({"status": "login_not_unique"}, status=400)
             
-            user = CustomUser(username=username, email=email, password=password)
-            user.save(we_create=True) #TODO Переделать на использование менеджера
+            user = CustomUser.objects.create_user(username=username, email=email, password=password)
             
             login(request, user)
 
@@ -98,7 +97,7 @@ def change(request):
         if username is not None:
             user.username = username
             
-        user.save(we_create=False)
+        user.save()
         login(request, user)
         
         return JsonResponse({"status": "fully completed"}, status=200)

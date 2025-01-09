@@ -28,19 +28,17 @@ def create_note(request):
         if request.user.is_authenticated: 
             user = CustomUser.objects.get(user_id=request.user.pk)
             # Создаём объект
-            note = Note(user=user,
+            note = Note.objects.create_note(user=user,
                         content=note_content, read_only=mode, 
                         dead_line=dead_line, deletion_on_first_reading=one_read)
-            note.save(we_create=True)
             
             return JsonResponse({'note_id': str(note.note_id)})
         else:
             user = CustomUser.objects.get(username='root')
             # Создаём объект
-            note = Note(user=user,
+            note = Note.objects.create_note(user=user,
                         content=note_content, read_only=mode, 
                         dead_line=dead_line, deletion_on_first_reading=one_read)
-            note.save(we_create=True)
             
             return JsonResponse({'note_id': str(note.note_id)})
         
@@ -96,7 +94,7 @@ def write_note(request, note_id):
         
         # Изменяем модель
         note.content = new_content
-        note.save(we_create=False)
+        note.save()
         
         return JsonResponse({'status': 200}, status=200)
     elif request.method == 'GET':

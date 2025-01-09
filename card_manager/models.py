@@ -1,8 +1,22 @@
 from django.db import models
 from service_accounts.models import CustomUser
+from django.contrib.auth.models import BaseUserManager
 
-#TODO Сделать менеджер, как для пользователя
-
+class NoteManager(BaseUserManager):
+    def create_note(self, user:object, content:str, read_only:bool, 
+                    dead_line:str, deletion_on_first_reading:bool) -> object:
+        dfr = deletion_on_first_reading
+        
+        # Создание id
+        from key_check import create_id
+        id = create_id()
+        
+        note = self.model(note_id=id,
+                          user=user, content=content, read_only=read_only, 
+                    dead_line=dead_line, deletion_on_first_reading=dfr)
+        
+        note.save(using=self._db)
+        return note
 class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
@@ -13,6 +27,8 @@ class Note(models.Model):
     dead_line = models.DateTimeField()
     read_count = models.PositiveIntegerField(default=0)
     deletion_on_first_reading = models.BooleanField(default=False)
+    
+    objects = NoteManager()
 
     def __str__(self):
         return self.note_id     # Возвращает индефикатор заметки при выводе
@@ -22,14 +38,7 @@ class Note(models.Model):
         verbose_name = 'Заметка'     # Человекочитаемое имя модели в единственном числе
         verbose_name_plural = 'Заметки'  # Человекочитаемое имя модели во множественном числе
         db_table = 'note'            # Имя таблицы в базе данных
-
-    def save(self, *args, we_create:bool=True ,**kwargs):
-        if we_create: # True создаём, False обновляем
-            from key_check import create_id
-            self.note_id = create_id()
         
-        super().save(*args, **kwargs)
-            
     def increase_reads(self):
         self.read_count += 1
-        self.save(we_create=False)
+        self.save()
