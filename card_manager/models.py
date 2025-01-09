@@ -17,6 +17,7 @@ class NoteManager(BaseUserManager):
         
         note.save(using=self._db)
         return note
+
 class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
@@ -42,3 +43,7 @@ class Note(models.Model):
     def increase_reads(self):
         self.read_count += 1
         self.save()
+    
+    def is_valid(self):
+        from check_life import is_valid
+        return is_valid(self)

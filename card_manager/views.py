@@ -59,7 +59,7 @@ def read_note(request, note_id):
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
         
-        if not is_valid(note):
+        if not note.is_valid():
             return JsonResponse({'error': 'Page not found'}, status=404)
         
         mod = 'read' if note.read_only else 'write'
