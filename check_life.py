@@ -9,4 +9,4 @@ def is_valid(note: object) -> bool:
             return False
     return True
 
-#TODO Сделать в виде класса, который будет проверять можно ли выдать записку
+#TODO Дорабатывать 

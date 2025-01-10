@@ -49,27 +49,28 @@ def authorization(request):
             password = request_data.get('password')
             remember_user = request_data.get('rememberMe', False)
             
-            #TODO Сделать в виде отдельного класса
             #region
-            user = CustomUser.objects.filter(username=username).first()
+            user = CustomUser.objects.filter(username=username).first() # Получаем пользователя
             if not user:
                 return JsonResponse({"error": "no_such_account_exists"}, status=404)
 
             pb = user.pb
 
-            if datetime.now() <= pb.unlock_date:
+            if datetime.now() <= pb.unlock_date: # Проверяем блокеровку 
                 return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
 
             if user.check_password(password):
-                user = authenticate(request, username=username, password=password)
                 login(request, user)
-                request.session.set_expiry(0 if not remember_user else None)
+                request.session.set_expiry(0 if not remember_user else None) # Запоменать пользователя или нет
                 return JsonResponse({"status": "ok"}, status=200)
+            
             else:
-                pb.incorrect_password_counter += 1
-                if pb.incorrect_password_counter >= 4:
+                ipc = pb.incorrect_password_counter
+                ipc += 1
+                # Блокируем аккаунт
+                if ipc >= 4:                            # переводим часы в объект времени
                     pb.unlock_date = datetime.now() + timedelta(hours=pb.next_blocking_for_how_long)
-                    pb.incorrect_password_counter = 0
+                    ipc = 0
                     pb.save()
                     return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
                 pb.save()
