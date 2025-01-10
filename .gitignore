@@ -8,6 +8,8 @@ __pycache__/
 
 # My
 postgresql.dockerfile
+service_accounts/migrations/
+card_manager/migrations/
 
 # Distribution / packaging
 .Python
