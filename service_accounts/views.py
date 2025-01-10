@@ -65,12 +65,11 @@ def authorization(request):
                 return JsonResponse({"status": "ok"}, status=200)
             
             else:
-                ipc = pb.incorrect_password_counter
-                ipc += 1
+                pb.incorrect_password_counter += 1
                 # Блокируем аккаунт
-                if ipc >= 4:                            # переводим часы в объект времени
+                if pb.incorrect_password_counter >= 4:                            # переводим часы в объект времени
                     pb.unlock_date = datetime.now() + timedelta(hours=pb.next_blocking_for_how_long)
-                    ipc = 0
+                    pb.incorrect_password_counter = 0
                     pb.save()
                     return JsonResponse({"error": "account_blocked", "unlocked": str(pb.unlock_date - datetime.now())}, status=403)
                 pb.save()

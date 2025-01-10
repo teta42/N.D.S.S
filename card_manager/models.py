@@ -4,7 +4,7 @@ from django.contrib.auth.models import BaseUserManager
 
 class NoteManager(BaseUserManager):
     def create_note(self, user:object, content:str, read_only:bool, 
-                    dead_line:str, deletion_on_first_reading:bool) -> object:
+                    dead_line:str, deletion_on_first_reading:bool, only_authorized:bool) -> object:
         dfr = deletion_on_first_reading
         
         # Создание id
@@ -13,7 +13,8 @@ class NoteManager(BaseUserManager):
         
         note = self.model(note_id=id,
                           user=user, content=content, read_only=read_only, 
-                    dead_line=dead_line, deletion_on_first_reading=dfr)
+                    dead_line=dead_line, deletion_on_first_reading=dfr,
+                    only_authorized=only_authorized)
         
         note.save(using=self._db)
         return note
@@ -28,6 +29,8 @@ class Note(models.Model):
     dead_line = models.DateTimeField()
     read_count = models.PositiveIntegerField(default=0)
     deletion_on_first_reading = models.BooleanField(default=False)
+    only_authorized = models.BooleanField(default=False)
+    # False Всем True только авторизованным
     
     objects = NoteManager()
 
@@ -44,6 +47,6 @@ class Note(models.Model):
         self.read_count += 1
         self.save()
     
-    def is_valid(self):
+    def is_valid(self, user:bool) -> bool:
         from check_life import is_valid
-        return is_valid(self)
+        return is_valid(self, user)
