@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Форма для изменения данных аккаунта</title>
+</head>
+<body>
+  <h1>Форма для изменения данных аккаунта</h1>
+  <form id="accountForm">
+    <label for="login">Логин:</label>
+    <input type="text" id="login" name="login"><br><br>
+    <label for="password">Пароль:</label>
+    <input type="password" id="password" name="password"><br><br>
+    <button type="button" onclick="changeAccount()">Изменить</button>
+    <button type="button" onclick="logout()">Выйти</button>
+  </form>
+
+  <script>
+    function changeAccount() {
+      let login = document.getElementById('login').value;
+      let password = document.getElementById('password').value;
+
+      // Проверка на пустые поля
+      if (login === '') {
+        login = 'None';
+      }
+      if (password === '') {
+        password = 'None';
+      }
+
+      const data = { login: login, password: password };
+
+      fetch('http://127.0.0.1:8000/account/change/', {
+        method: 'PUT',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'ok') {
+          const message = document.createElement('p');
+          message.style.color = 'green';
+          message.textContent = 'Данные изменены';
+          document.body.appendChild(message);
+          setTimeout(function() {
+            window.location.href = 'http://127.0.0.1:8000/';
+          }, 5000);
+        }
+      });
+    }
+
+    function logout() {
+      window.location.href = 'http://127.0.0.1:8000/';
+    }
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+  </script>
+</body>
+</html>

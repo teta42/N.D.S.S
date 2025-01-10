@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# My
+postgresql.dockerfile
+service_accounts/migrations/
+card_manager/migrations/
+
 # Distribution / packaging
 .Python
 build/
