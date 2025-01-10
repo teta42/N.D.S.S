@@ -9,6 +9,7 @@
             const inputText = document.getElementById('textInput').value;
             const mode = document.querySelector('input[name="mode"]:checked').value;
             const one_read = document.querySelector('input[name="one-read"]:checked').value;
+            const only_auth = document.querySelector('input[name="only-authorized"]:checked').value;
             const date = new Date(document.getElementById('datetimeInput').value);
             const dead_line = date.toISOString();
             const csrftoken = getCookie('csrftoken');
@@ -19,7 +20,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken
                 },
-                body: JSON.stringify({ content: inputText, read_only: mode, dead_line: dead_line, one_read: one_read })
+                body: JSON.stringify({ content: inputText, read_only: mode, dead_line: dead_line, one_read: one_read, only_auth: only_auth })
             })
             .then(response => response.json())
             .then(data => {
@@ -75,6 +76,16 @@
         </label>
         <label>
             <input type="radio" name="one-read" value="False"> Нет
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Записка только для авторизованных пользователей?:</legend>
+        <label>
+            <input type="radio" name="only-authorized" value="True" checked> Да
+        </label>
+        <label>
+            <input type="radio" name="only-authorized" value="False"> Нет
         </label>
     </fieldset>
 
