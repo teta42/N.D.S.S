@@ -3,12 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Домашняя страница</title>
+    <link rel="stylesheet" href="styles.css">
+    <title>домашняя страница</title>
 </head>
 <body>
-    <h1>Пока ничего нет</h1>
-    <script>
+    <div class="header">
+        <div class="search">
+            <input type="text" id="search-input" class="search-input" placeholder="Поиск...">
+            <button id="search-button" class="search-button">Поиск</button>
+        </div>
 
-    </script>
+        <button id="account-button" class="account">Аккаунт</button>
+    </div>
+
+    <div class="content">
+        <div id="create-note" class="create-note">
+            
+        </div>
+    </div>
+
+    <footer>
+        <a href="example">Test</a>
+    </footer>
+
+    <script src="script.js" defer></script>
 </body>
 </html>

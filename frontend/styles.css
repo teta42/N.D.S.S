@@ -1,0 +1,76 @@
+body, html {
+    position: relative;
+    height: 100%;
+    margin: 0;
+
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0; /* Светлый фон для контраста */
+    color: #333; /* Цвет текста */
+}
+
+.account {
+    width: 4%; /* Ширина */
+    aspect-ratio: 1 / 1; /* Соотношение сторон 1:1 */
+
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: lightblue; /* Для наглядности */
+    padding: 10px;
+}
+
+.search {
+    height: 5%;
+    width: 80%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%); /* Центрируем элемент по горизонтали */
+    background-color: lightgreen; /* Для наглядности */
+    padding: 10px;
+    display: flex; /* Включаем Flexbox */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+}
+
+.search-input {
+    height: 100%; /* Занимает всю высоту родителя */
+    width: 90%; /* Ширина может быть задана автоматически или фиксированно */
+}
+
+.search-button {
+    margin-left: 0.75%;
+}
+
+.content {
+    height: 75%;
+    width: 98%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Центрируем элемент по обоим направлениям */
+    background-color: red; /* Для наглядности */
+    padding: 10px;
+    display: flex; /* Включаем Flexbox */
+}
+
+.content create-note { /* # TODO доделать
+    width: 4%; /* Ширина */
+    aspect-ratio: 5 / 1; /* Соотношение сторон 1:1 */
+    background-color: black;
+}
+
+footer {
+    height: 10%;
+    width: 100%;
+
+    position: absolute;
+    bottom: 0;
+    left: 0; /* Можно задать другие значения для выравнивания */
+    background-color: blue;
+    color: white;
+}
+
+footer a {
+    color: orange;
+}
