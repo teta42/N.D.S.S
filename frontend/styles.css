@@ -9,13 +9,13 @@ body, html {
 }
 
 .account {
-    width: 4%; /* Ширина */
+    width: 4%;
     aspect-ratio: 1 / 1; /* Соотношение сторон 1:1 */
 
     position: absolute;
     top: 0;
     right: 0;
-    background-color: lightblue; /* Для наглядности */
+    background-color: lightblue;
     padding: 10px;
 }
 
@@ -26,39 +26,52 @@ body, html {
     top: 0;
     left: 50%;
     transform: translateX(-50%); /* Центрируем элемент по горизонтали */
-    background-color: lightgreen; /* Для наглядности */
+    background-color: lightgreen;
     padding: 10px;
-    display: flex; /* Включаем Flexbox */
+    display: flex;
     justify-content: center; /* Центрируем по горизонтали */
     align-items: center; /* Центрируем по вертикали */
 }
 
 .search-input {
-    height: 100%; /* Занимает всю высоту родителя */
-    width: 90%; /* Ширина может быть задана автоматически или фиксированно */
+    height: 100%;
+    width: 90%;
 }
 
 .search-button {
     margin-left: 0.75%;
 }
 
-.content {
-    height: 75%;
+.container {
+    border: 2px solid #ccc;
+    background-color: red;
+    height: 75vh;
     width: 98%;
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Центрируем элемент по обоим направлениям */
-    background-color: red; /* Для наглядности */
+    transform: translate(-50%, -50%);
     padding: 10px;
-    display: flex; /* Включаем Flexbox */
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
 }
 
-.content create-note { /* # TODO доделать
-    width: 4%; /* Ширина */
-    aspect-ratio: 5 / 1; /* Соотношение сторон 1:1 */
-    background-color: black;
+.content {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    flex-grow: 1;
+    overflow-y: auto;
 }
+
+.rectangle {
+    flex: 1 1 100px;
+    margin: 5px;
+    background-color: #3498db;
+    height: 100px;
+}
+
 
 footer {
     height: 10%;
@@ -66,7 +79,7 @@ footer {
 
     position: absolute;
     bottom: 0;
-    left: 0; /* Можно задать другие значения для выравнивания */
+    left: 0; 
     background-color: blue;
     color: white;
 }
