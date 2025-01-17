@@ -1,24 +1,34 @@
-let rectangleCount = 0;
+const cardContainer = document.getElementById('cardContainer');
+const addCardButton = document.getElementById('create-note');
 
-function addRectangles(count) {
-    const content = document.getElementById('content');
-    for (let i = 0; i < count; i++) {
-        const rectangle = document.createElement('div');
-        rectangle.className = 'rectangle';
-        content.appendChild(rectangle);
+let a = 4
+
+function add_card() {
+    console.log(`Добавленна карточка ${a}`)
+    a += 4
+    for (let i = 0; i < 4; i++) {
+        const newCard = document.createElement('div');
+        newCard.className = 'card';
+        newCard.textContent = `Карточка ${cardContainer.children.length + 1}`;
+        cardContainer.appendChild(newCard);
     }
 }
 
-// Изначально добавляем карточки
-addRectangles(20);
 
-function checkScroll() {
-    const container = document.getElementById('scrollContainer');
-    // Проверяем, достигли ли мы дна контейнера
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
-        addRectangles(5); // Добавляем карточки
+
+addCardButton.addEventListener('click', () => {
+    add_card()
+});
+
+
+cardContainer.addEventListener('scroll', () => {
+    const { scrollTop, scrollHeight, clientHeight } = cardContainer;
+    if (scrollTop + clientHeight <= scrollHeight) {
+        if (a <= 666) {
+            console.log('Прокручиваемый элемент достиг низа!');
+            add_card()
+        } else {
+            console.error('Больше карточек нет!')
+        }
     }
-}
-
-// Проверяем прокрутку
-document.getElementById('scrollContainer').addEventListener('scroll', checkScroll);
+});
