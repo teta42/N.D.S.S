@@ -4,9 +4,32 @@ import json
 from .models import Note
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
-from check_life import is_valid
 from service_accounts.customuser import CustomUser
 
+def get_notes(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Вы не авторизованы"}, status=401)
+
+    user = get_object_or_404(CustomUser, pk=request.user.user_id)
+    notes = user.note.all()
+
+    # Преобразование заметок в список словарей
+    notes_list = [
+        {
+            'id': note.note_id,
+            'content': note.content,
+            'created_at': note.created_at,
+            'mod': ('read' if note.read_only else 'write'),
+            'dead_line': note.dead_line,
+        }
+        for note in notes
+    ]
+
+    return JsonResponse({'object': notes_list}, status=200)
+        
 def home(request):
     return render(request, 'home.html')
 
