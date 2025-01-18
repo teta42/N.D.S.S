@@ -1,34 +1,37 @@
-const cardContainer = document.getElementById('cardContainer');
-const addCardButton = document.getElementById('create-note');
+const url = 'http://127.0.0.1:8000/'
 
-let a = 4
-
-function add_card() {
-    console.log(`Добавленна карточка ${a}`)
-    a += 4
-    for (let i = 0; i < 4; i++) {
-        const newCard = document.createElement('div');
-        newCard.className = 'card';
-        newCard.textContent = `Карточка ${cardContainer.children.length + 1}`;
-        cardContainer.appendChild(newCard);
-    }
+function get_notes() {
+    fetch(`${url}/note/getnotes/`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Статус ошибки: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        add_notes(data);
+    })
+    .catch(error => {
+        console.error('Произошла ошибка: ', error);
+    });
 }
 
+function add_notes(data) {
+    data = data.object[0]
+    console.log(data);
+    console.log(data.mod)
 
+    const newDiv = document.createElement('div');
 
-addCardButton.addEventListener('click', () => {
-    add_card()
-});
+    newDiv.classList.add('card');
 
+    newDiv.innerText = `Загаловок: Будет\n${data.content}\n${data.created_at}\n${data.dead_line}\n${data.mod}\nСколько смотрели : Будет`;
 
-cardContainer.addEventListener('scroll', () => {
-    const { scrollTop, scrollHeight, clientHeight } = cardContainer;
-    if (scrollTop + clientHeight <= scrollHeight) {
-        if (a <= 666) {
-            console.log('Прокручиваемый элемент достиг низа!');
-            add_card()
-        } else {
-            console.error('Больше карточек нет!')
-        }
-    }
+    const container = document.getElementById('cardContainer');
+    container.appendChild(newDiv);
+
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    get_notes();
 });

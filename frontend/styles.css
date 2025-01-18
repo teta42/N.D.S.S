@@ -62,7 +62,7 @@ body, html {
 .card {
     height: 20vh;
 
-    flex: 0 0 calc(12% - 10px); /* Ограничивает количество карточек в строке до 4 */
+    flex: 0 0 calc(16% - 10px); 
     margin-bottom: 2%; /* Отступ снизу для карточек */
     background-color: white;
     border: 1px solid #ddd;
@@ -71,6 +71,15 @@ body, html {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     box-sizing: border-box; /* Учитывает отступы и границы в ширине */
 }
+
+.card br {
+    margin: 2px 0; /* Отступ между строками */
+}
+
+.card {
+    font-size: 10px; /* Установка размера шрифта */
+}
+
 
 #create-note {
     height: 25.5%;

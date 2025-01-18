@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import json
 from .models import Note
 from django.shortcuts import get_object_or_404
@@ -31,7 +31,11 @@ def get_notes(request):
     return JsonResponse({'object': notes_list}, status=200)
         
 def home(request):
-    return render(request, 'home.html')
+    if request.user.is_authenticated:
+        return render(request, 'home.html')
+    else:
+        return redirect('aut')
+        # return HttpResponse('Вы не авторизованы')
 
 @ensure_csrf_cookie
 def create_note(request):
