@@ -17,19 +17,21 @@ function get_notes() {
 }
 
 function add_notes(data) {
-    data = data.object[0]
-    console.log(data);
-    console.log(data.mod)
+    const inter = data.object
+    for (const note of inter) {
+        // data = data.object[0]
+        console.log(note);
+        console.log(note.mod)
 
-    const newDiv = document.createElement('div');
+        const newNote = document.createElement('button');
 
-    newDiv.classList.add('card');
+        newNote.classList.add('card');
 
-    newDiv.innerText = `Загаловок: Будет\n${data.content}\n${data.created_at}\n${data.dead_line}\n${data.mod}\nСколько смотрели : Будет`;
+        newNote.innerText = `Загаловок: Будет\n${note.content}\n${note.created_at}\n${note.dead_line}\n${note.mod}\nСколько смотрели : Будет`;
 
-    const container = document.getElementById('cardContainer');
-    container.appendChild(newDiv);
-
+        const container = document.getElementById('cardContainer');
+        container.appendChild(newNote);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
