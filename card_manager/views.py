@@ -31,7 +31,9 @@ def get_notes(request):
     return JsonResponse({'object': notes_list}, status=200)
         
 def home(request):
-    if request.user.is_authenticated:
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+    elif request.user.is_authenticated:
         return render(request, 'home.html')
     else:
         return redirect('aut')
@@ -79,36 +81,38 @@ def create_note(request):
 
 @ensure_csrf_cookie
 def read_note_html(request, note_id):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
     # Отображение HTML-страницы с заметкой
     note = get_object_or_404(Note, note_id=note_id)
     return render(request, 'read_note.html')
 
 @ensure_csrf_cookie
 def read_note(request, note_id):
-    if request.method == 'GET':
-        note = get_object_or_404(Note, note_id=note_id) 
-        # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
-        
-        if not note.is_valid(user=(request.user.is_authenticated)):
-            return JsonResponse({'error': 'Page not found'}, status=404)
-        
-        mod = 'read' if note.read_only else 'write'
-        
-        # Создаем словарь с данными
-        response_data = {
-            'created_at': note.created_at,
-            'content': note.content,
-            'mod': mod,
-            'dead_line': note.dead_line,
-        }
-
-        # Увеличиваем счётчик прочтений на 1
-        note.increase_reads()
-        
-        # Возвращаем JsonResponse с данными
-        return JsonResponse(response_data, status=200)
-    else:
+    if request.method != 'GET':
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+    
+    note = get_object_or_404(Note, note_id=note_id) 
+    # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
+    
+    if not note.is_valid(user=(request.user.is_authenticated)):
+        return JsonResponse({'error': 'Page not found'}, status=404)
+    
+    mod = 'read' if note.read_only else 'write'
+    
+    # Создаем словарь с данными
+    response_data = {
+        'created_at': note.created_at,
+        'content': note.content,
+        'mod': mod,
+        'dead_line': note.dead_line,
+    }
+
+    # Увеличиваем счётчик прочтений на 1
+    note.increase_reads()
+    
+    # Возвращаем JsonResponse с данными
+    return JsonResponse(response_data, status=200)
 
 def write_note(request, note_id):
     if request.method == 'POST':
@@ -133,7 +137,7 @@ def write_note(request, note_id):
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
     
 def page_404(request):
-    if request.method == "GET":
-        return render(request, '404.html')
-    else:
+    if request.method != 'GET':
         return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+    
+    return render(request, '404.html')

@@ -50,7 +50,7 @@ def authorization(request):
             remember_user = request_data.get('rememberMe', False)
             
             #region
-            user = CustomUser.objects.filter(username=username).first() # Получаем пользователя
+            user = CustomUser.objects.filter(username=username).first() # Получаем первого пользователя
             if not user:
                 return JsonResponse({"error": "no_such_account_exists"}, status=404)
 
@@ -67,7 +67,7 @@ def authorization(request):
             else:
                 pb.incorrect_password_counter += 1
                 # Блокируем аккаунт
-                if pb.incorrect_password_counter >= 4:                            # переводим часы в объект времени
+                if pb.incorrect_password_counter >= 4: # переводим часы в объект времени
                     pb.unlock_date = datetime.now() + timedelta(hours=pb.next_blocking_for_how_long)
                     pb.incorrect_password_counter = 0
                     pb.save()

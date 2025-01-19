@@ -21,7 +21,6 @@ function add_notes(data) {
     for (const note of inter) {
         // data = data.object[0]
         console.log(note);
-        console.log(note.mod)
 
         const newNote = document.createElement('button');
 
