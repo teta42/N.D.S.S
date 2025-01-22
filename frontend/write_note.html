@@ -11,7 +11,7 @@
             const csrftoken = getCookie('csrftoken');
 
             fetch(`http://127.0.0.1:8000/note/${noteId}/write/`, { // Используем ID в URL
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken

@@ -63,16 +63,16 @@ def create_note(request):
                         dead_line=dead_line, deletion_on_first_reading=one_read, 
                         only_authorized=only_auth)
             
-            return JsonResponse({'note_id': str(note.note_id)})
+            return JsonResponse({'note_id': str(note.note_id)}, status=201)
         else:
-            user = CustomUser.objects.get(username='root')
+            user = CustomUser.objects.get(username='anonymous')
             # Создаём объект
             note = Note.objects.create_note(user=user,
                         content=note_content, read_only=mode, 
                         dead_line=dead_line, deletion_on_first_reading=one_read,
                         only_authorized=only_auth)
             
-            return JsonResponse({'note_id': str(note.note_id)})
+            return JsonResponse({'note_id': str(note.note_id)}, status=201)
         
     elif request.method == 'GET':
         return render(request, 'create_note.html')
@@ -115,7 +115,7 @@ def read_note(request, note_id):
     return JsonResponse(response_data, status=200)
 
 def write_note(request, note_id):
-    if request.method == 'POST':
+    if request.method == 'PUT':
         note = get_object_or_404(Note, note_id=note_id) 
         # Возвращение 404 если записки с таким id нет, если нет то возврощяем объект
         if note.read_only == True:
