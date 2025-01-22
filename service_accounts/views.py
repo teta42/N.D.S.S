@@ -26,7 +26,7 @@ def registration(request):
 
             request.session.set_expiry(0 if not remember_me else None)
 
-            return JsonResponse({"status": "ok"})
+            return JsonResponse({"status": "ok"}, status=200)
         
         except json.JSONDecodeError:
             print("error invalid_json")
