@@ -1,16 +1,15 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils.translation import gettext as _
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, user_id=None, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
-        
+    def create_user(self, email=None, user_id=None, password=None, **extra_fields):
         if user_id is None:
             from key import create_id
             user_id = create_id()
-        
-        email = self.normalize_email(email)
+
+        if email != None:
+            email = self.normalize_email(email)
         user = self.model(email=email, user_id=user_id, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -27,7 +26,8 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     user_id = models.CharField(max_length=7, primary_key=True)
-
+    email = models.EmailField(_('email address'), blank=True, null=True, unique=False)
+    
     objects = CustomUserManager()
 
     def __str__(self):
