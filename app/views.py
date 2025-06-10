@@ -45,10 +45,12 @@ class RegView(APIView):
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data["user"]
-        login(request, user)
-        return Response({"message": "Вход выполнен успешно"}, status=status.HTTP_200_OK)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.validated_data["user"]
+            login(request, user)
+            return Response({"message": "Вход выполнен успешно"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Incorrect authorization data"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Выход из аккаунта
