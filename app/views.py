@@ -18,6 +18,7 @@ from .serializer import (
 # Работа с заметками
 class NoteAPI(ModelViewSet):
     serializer_class = NoteSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user.is_authenticated:

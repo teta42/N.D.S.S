@@ -54,10 +54,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password": {"write_only": True},
         }
 
-    def validate_username(self, value):
-        if CustomUser.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Это имя пользователя уже занято.")
-        return value
+    # def validate_username(self, value):
+    #     if CustomUser.objects.filter(username=value).exists():
+    #         raise serializers.ValidationError("Это имя пользователя уже занято.")
+    #     return value
 
     def create(self, validated_data):
         return CustomUser.objects.create_user(
