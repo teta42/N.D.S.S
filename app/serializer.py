@@ -94,22 +94,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ["username", "password"]
 
     def validate_username(self, value):
-        current_user = self.instance
+        current_user = self.instance  # Текущий пользователь
+
+        # Если имя не изменилось — просто возвращаем
         if current_user and current_user.username == value:
             return value
 
+        # Проверяем, занято ли новое имя
         if CustomUser.objects.filter(username=value).exists():
             raise serializers.ValidationError("Это имя пользователя уже занято.")
-
         return value
 
     def update(self, instance, validated_data):
-        instance.username = validated_data.get("username", instance.username)
+        # Обновляем только те поля, которые присутствуют в validated_data
+        if "username" in validated_data:
+            instance.username = validated_data["username"]
 
-        password = validated_data.get("password")
-        if password:
-            instance.set_password(password)
+        if "password" in validated_data:
+            instance.set_password(validated_data["password"])
 
         instance.save()
         return instance
-

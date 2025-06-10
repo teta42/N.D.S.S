@@ -62,12 +62,28 @@ class LogoutView(APIView):
         return Response({"message": "Выход выполнен успешно"}, status=status.HTTP_200_OK)
 
 
-# Обновление данных пользователя
 class UpdateAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
-        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        # Полное обновление: все поля обязательны (кроме тех, что указаны как required=False)
+        serializer = UserUpdateSerializer(
+            request.user, 
+            data=request.data, 
+            partial=False  # Полное обновление
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        # Частичное обновление: только указанные поля
+        serializer = UserUpdateSerializer(
+            request.user, 
+            data=request.data, 
+            partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

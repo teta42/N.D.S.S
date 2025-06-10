@@ -51,7 +51,7 @@ class AccountTest(APITestCase):
         updated_data = {'username': 'updated_user', 'password': 'updated_pass'}
         self.client.force_login(self.default_user)
         
-        response = self.client.put(reverse('update_account'), updated_data)
+        response = self.client.put(reverse('update_account'), updated_data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {"username": updated_data['username']})
@@ -60,12 +60,82 @@ class AccountTest(APITestCase):
         self.assertEqual(updated_user.username, updated_data['username'])
         self.assertTrue(updated_user.check_password(updated_data['password']))
     
+    def test_update_account_only_username(self):
+        """Проверяет обновление только имени пользователя через PATCH."""
+        new_username = 'new_username'
+        self.client.force_login(self.default_user)
+
+        response = self.client.patch(reverse('update_account'), {'username': new_username}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], new_username)
+
+        updated_user = User.objects.get(pk=self.default_user.pk)
+        self.assertEqual(updated_user.username, new_username)
+        self.assertTrue(updated_user.check_password(self.default_user_data['password']))
+
+
+    def test_update_account_only_password(self):
+        """Проверяет обновление только пароля через PATCH."""
+        new_password = 'new_secure_pass'
+        self.client.force_login(self.default_user)
+
+        response = self.client.patch(reverse('update_account'), {'password': new_password}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], self.default_user_data['username'])
+
+        updated_user = User.objects.get(pk=self.default_user.pk)
+        self.assertEqual(updated_user.username, self.default_user_data['username'])
+        self.assertTrue(updated_user.check_password(new_password))
+
+
+    def test_update_account_both_fields(self):
+        """Проверяет полное обновление имени и пароля через PUT."""
+        updated_data = {'username': 'new_name', 'password': 'new_pass'}
+        self.client.force_login(self.default_user)
+
+        response = self.client.put(reverse('update_account'), updated_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], updated_data['username'])
+
+        updated_user = User.objects.get(pk=self.default_user.pk)
+        self.assertEqual(updated_user.username, updated_data['username'])
+        self.assertTrue(updated_user.check_password(updated_data['password']))
+
+
+    def test_update_account_same_username(self):
+        """Проверяет, что можно отправить тот же username без ошибки."""
+        same_data = {'username': self.default_user_data['username']}
+        self.client.force_login(self.default_user)
+
+        response = self.client.patch(reverse('update_account'), same_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], self.default_user_data['username'])
+
+
+    def test_update_account_username_already_taken(self):
+        """Проверяет, что нельзя установить существующее имя пользователя."""
+        another_user = User.objects.create_user(username='another_user', password='pass123')
+        self.client.force_login(self.default_user)
+
+        response = self.client.patch(reverse('update_account'), {'username': another_user.username}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('username', response.data)
+        self.assertEqual(
+            str(response.data['username'][0]),
+            'Это имя пользователя уже занято.'
+        )
+    
     def test_update_account_with_partial_data(self):
         """Проверяет обновление части данных пользователя через PATCH-запрос."""
         partial_data = {'username': 'partially_updated'}
         self.client.force_login(self.default_user)
         
-        response = self.client.patch(reverse('update_account'), partial_data)
+        response = self.client.patch(reverse('update_account'), partial_data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['username'], partial_data['username'])
