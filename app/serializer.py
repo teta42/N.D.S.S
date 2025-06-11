@@ -21,7 +21,6 @@ class NoteSerializer(serializers.ModelSerializer):
         content = validated_data.get("content")
         read_only = validated_data.get("read_only", True)
         dead_line = validated_data.get("dead_line")
-        deletion_on_first_reading = validated_data.get("deletion_on_first_reading", False)
         only_authorized = validated_data.get("only_authorized", False)
 
         return Note.objects.create_note(
@@ -29,7 +28,6 @@ class NoteSerializer(serializers.ModelSerializer):
             content=content,
             read_only=read_only,
             dead_line=dead_line,
-            deletion_on_first_reading=deletion_on_first_reading,
             only_authorized=only_authorized,
         )
 

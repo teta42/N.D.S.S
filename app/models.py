@@ -42,8 +42,7 @@ class CustomUser(AbstractUser):
 
 class NoteManager(BaseUserManager):
     def create_note(self, user:object, content:str, read_only:bool, 
-                    dead_line:str, deletion_on_first_reading:bool, only_authorized:bool) -> object:
-        dfr = deletion_on_first_reading
+                    dead_line:str, only_authorized:bool) -> object:
         
         # Создание id
         from key import create_id
@@ -51,7 +50,7 @@ class NoteManager(BaseUserManager):
         
         note = self.model(note_id=id,
                           user=user, content=content, read_only=read_only, 
-                    dead_line=dead_line, deletion_on_first_reading=dfr,
+                    dead_line=dead_line,
                     only_authorized=only_authorized)
         
         note.save(using=self._db)
@@ -65,8 +64,6 @@ class Note(models.Model):
     read_only = models.BooleanField(default=True)  
     # 1 = чтение ; 0 = чтение и запись
     dead_line = models.DateTimeField()
-    read_count = models.PositiveIntegerField(default=0)
-    deletion_on_first_reading = models.BooleanField(default=False)
     only_authorized = models.BooleanField(default=False)
     # False Всем True только авторизованным
     
@@ -80,7 +77,3 @@ class Note(models.Model):
         verbose_name = 'Заметка'     # Человекочитаемое имя модели в единственном числе
         verbose_name_plural = 'Заметки'  # Человекочитаемое имя модели во множественном числе
         db_table = 'note'            # Имя таблицы в базе данных
-        
-    def increase_reads(self):
-        self.read_count += 1
-        self.save()
