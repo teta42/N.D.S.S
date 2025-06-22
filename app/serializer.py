@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from django.utils import timezone
 
 from .models import Note, CustomUser
 
@@ -15,28 +14,6 @@ class NoteSerializer(serializers.ModelSerializer):
             "created_at": {"read_only": True},
             "read_count": {"read_only": True},
         }
-
-#TODO Проблема в том, что я отправляю время в своём часовом поясе, но Django не преобразует его, а сохраняет как UTC-время без учёта таймзоны.
-    def validate_dead_line(self, value):
-        print(value.tzinfo)
-        
-        now = timezone.now()
-        
-        if now >= value:
-            raise serializers.ValidationError('The note has expired')
-
-        return value
-    
-    def validate_only_authorized(self, value):
-        user = self.context["request"].user
-
-        if user.is_authenticated:
-            return value
-        else:
-            if value:
-                raise serializers.ValidationError('note for authorized users only')
-            
-            return value
         
     def create(self, validated_data):
         user = self.context["request"].user
@@ -58,9 +35,6 @@ class NoteSerializer(serializers.ModelSerializer):
         instance.content = validated_data.get("content", instance.content)
         instance.read_only = validated_data.get("read_only", instance.read_only)
         instance.dead_line = validated_data.get("dead_line", instance.dead_line)
-        instance.deletion_on_first_reading = validated_data.get(
-            "deletion_on_first_reading", instance.deletion_on_first_reading
-        )
         instance.only_authorized = validated_data.get("only_authorized", instance.only_authorized)
         instance.save()
         return instance

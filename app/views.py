@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils import timezone
+from rest_framework.exceptions import NotFound
 
 from django.contrib.auth import login, logout
 
@@ -22,7 +24,10 @@ class NoteAPI(ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Note.objects.filter(user=self.request.user)
+            return Note.objects.filter(
+                user=self.request.user,
+                dead_line__gt=timezone.now()  # Только не просроченные
+            )
         return Note.objects.none()
 
 
