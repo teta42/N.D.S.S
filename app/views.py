@@ -21,21 +21,23 @@ from .serializer import (
 class NoteAPI(ModelViewSet):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = Note.objects.filter(dead_line__gt=timezone.now())
 
     def get_queryset(self):
         user = self.request.user
-        if (user and user.is_authenticated):
-            # Список только своих активных заметок
-            return Note.objects.filter(user=user, dead_line__gt=timezone.now())
+        now = timezone.now()
+        if user and user.is_authenticated:
+            return Note.objects.filter(user=user, dead_line__gt=now)
         else:
-            return Note.objects.filter(dead_line__gt=timezone.now()).filter(only_authorized=False)
+            return Note.objects.filter(dead_line__gt=now, only_authorized=False)
 
     def get_object(self):
         user = self.request.user
         note_id = self.kwargs['pk']
-        note = Note.objects.get(pk=note_id)
-
+        try:
+            note = Note.objects.get(note_id=note_id)
+        except Note.DoesNotExist:
+            raise exceptions.NotFound("Note not found.")
+        
         # Проверка: актуальность заметки
         if note.dead_line <= timezone.now():
             raise exceptions.NotFound("Note has expired.")

@@ -41,8 +41,7 @@ class CustomUser(AbstractUser):
 
 
 class NoteManager(BaseUserManager):
-    def create_note(self, user:object, content:str, read_only:bool, 
-                    dead_line:str, only_authorized:bool) -> object:
+    def create_note(self, user:object, content:str, dead_line:str, only_authorized:bool, read_only:bool=True) -> object:
         
         # Создание id
         from key import create_id

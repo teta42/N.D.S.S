@@ -2,6 +2,10 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework.reverse import reverse
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
+from .models import Note
+
 
 User = get_user_model()
 
@@ -151,3 +155,107 @@ class AccountTest(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(username='delete_me').exists())
+        
+
+
+class NoteTest(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        
+        # Создаём пользователя
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='password123'
+        )
+        self.other_user = User.objects.create_user(
+            username='otheruser',
+            password='password123'
+        )
+
+        # Несколько заметок для теста
+        self.note_active_mine = Note.objects.create_note(
+            user=self.user,
+            content="Active mine",
+            dead_line=timezone.now() + timedelta(days=1),
+            only_authorized=False
+        )
+        self.note_expired_mine = Note.objects.create_note(
+            user=self.user,
+            content="Expired mine",
+            dead_line=timezone.now() - timedelta(days=1),
+            only_authorized=False
+        )
+        self.note_active_other = Note.objects.create_note(
+            user=self.other_user,
+            content="Active other",
+            dead_line=timezone.now() + timedelta(days=1),
+            only_authorized=False
+        )
+        self.note_only_auth = Note.objects.create_note(
+            user=self.other_user,
+            content="Only auth",
+            dead_line=timezone.now() + timedelta(days=1),
+            only_authorized=True
+        )
+        self.note_expired_only_auth = Note.objects.create_note(
+            user=self.other_user,
+            content="Expired only auth",
+            dead_line=timezone.now() - timedelta(days=1),
+            only_authorized=True
+        )
+
+    # --- Тесты для list ---
+
+    def test_authenticated_user_gets_only_own_notes(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('notes-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['note_id'], self.note_active_mine.note_id)
+
+    def test_unauthenticated_user_gets_public_notes(self):
+        url = reverse('notes-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # note_active_other — public
+        self.assertEqual(response.data[0]['note_id'], self.note_active_other.note_id)
+
+    # --- Тесты для retrieve ---
+
+    def test_retrieve_note_success(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('notes-detail', args=[self.note_active_mine.note_id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['note_id'], self.note_active_mine.note_id)
+
+    def test_retrieve_nonexistent_note_returns_404(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('notes-detail', args=['nonexistent'])
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_retrieve_expired_note_returns_404(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('notes-detail', args=[self.note_expired_mine.note_id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_retrieve_only_authorized_note_unauthenticated_returns_403(self):
+        url = reverse('notes-detail', args=[self.note_only_auth.note_id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_expired_only_authorized_note_returns_404(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('notes-detail', args=[self.note_expired_only_auth.note_id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
