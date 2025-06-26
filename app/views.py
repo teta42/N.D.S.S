@@ -1,10 +1,10 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from django.utils import timezone
-from rest_framework.exceptions import NotFound
+from rest_framework import exceptions
 
 from django.contrib.auth import login, logout
 
@@ -20,15 +20,32 @@ from .serializer import (
 # Работа с заметками
 class NoteAPI(ModelViewSet):
     serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = Note.objects.filter(dead_line__gt=timezone.now())
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Note.objects.filter(
-                user=self.request.user,
-                dead_line__gt=timezone.now()  # Только не просроченные
-            )
-        return Note.objects.none()
+        user = self.request.user
+        if (user and user.is_authenticated):
+            # Список только своих активных заметок
+            return Note.objects.filter(user=user, dead_line__gt=timezone.now())
+        else:
+            return Note.objects.filter(dead_line__gt=timezone.now()).filter(only_authorized=False)
+
+    def get_object(self):
+        user = self.request.user
+        note_id = self.kwargs['pk']
+        note = Note.objects.get(pk=note_id)
+
+        # Проверка: актуальность заметки
+        if note.dead_line <= timezone.now():
+            raise exceptions.NotFound("Note has expired.")
+
+        # Проверка доступа к конкретной заметке
+        if note.only_authorized:
+            if not (user and user.is_authenticated):
+                raise exceptions.PermissionDenied("This note is for authorized users only.")
+
+        return note
 
 
 # Регистрация пользователя
