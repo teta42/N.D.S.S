@@ -155,8 +155,6 @@ class AccountTest(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(username='delete_me').exists())
-        
-
 
 class NoteTest(APITestCase):
     def setUp(self):
@@ -258,4 +256,65 @@ class NoteTest(APITestCase):
         url = reverse('notes-detail', args=[self.note_expired_only_auth.note_id])
         response = self.client.get(url)
 
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        
+class CommentTest(APITestCase):
+    def setUp(self):
+        # Создаем пользователя
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpassword'
+        )
+
+        # Логинимся
+        self.client.login(username='testuser', password='testpassword')
+
+        # Создаем основную заметку
+        self.note = Note.objects.create_note(
+            user=self.user,
+            content="Основная заметка",
+            dead_line="2025-12-31T23:59:59Z",
+            only_authorized=False,
+            read_only=False
+        )
+
+        # Создаем несколько комментариев к этой заметке
+        self.comments = [
+            Note.objects.create_note(
+                user=self.user,
+                content=f"Комментарий {i}",
+                dead_line="2025-12-31T23:59:59Z",
+                only_authorized=False,
+                to_comment=self.note
+            ) for i in range(3)
+        ]
+
+        # URL для получения комментариев
+        self.url = reverse('get_comments', args=[self.note.note_id])
+
+    def test_get_comments_returns_paginated_list(self):
+        """Проверяет, что список комментариев возвращается с пагинацией"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertEqual(len(response.data['results']), 1)  # page_size = 1
+
+    def test_get_comments_count_only(self):
+        """Проверяет, что при параметре count-comments=1 возвращается только количество"""
+        response = self.client.get(self.url + '?count-comments=1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('count', response.data)
+        self.assertEqual(response.data['count'], len(self.comments))
+
+    def test_get_comments_pagination_page_size(self):
+        """Проверяет изменение размера страницы через параметр page_size"""
+        response = self.client.get(self.url + '?page_size=2')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertEqual(len(response.data['results']), 2)
+
+    def test_get_comments_invalid_note_id(self):
+        """Проверяет обработку запроса для несуществующей заметки"""
+        invalid_url = reverse('get_comments', args=['invalidid'])
+        response = self.client.get(invalid_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

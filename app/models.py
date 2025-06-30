@@ -41,7 +41,9 @@ class CustomUser(AbstractUser):
 
 
 class NoteManager(BaseUserManager):
-    def create_note(self, user:object, content:str, dead_line:str, only_authorized:bool, read_only:bool=True) -> object:
+    def create_note(self, user:object, content:str, 
+                    dead_line:str, only_authorized:bool, 
+                    read_only:bool=True, to_comment:str=None) -> object:
         
         # Создание id
         from key import create_id
@@ -50,7 +52,7 @@ class NoteManager(BaseUserManager):
         note = self.model(note_id=id,
                           user=user, content=content, read_only=read_only, 
                     dead_line=dead_line,
-                    only_authorized=only_authorized)
+                    only_authorized=only_authorized, to_comment=to_comment)
         
         note.save(using=self._db)
         return note
@@ -65,6 +67,7 @@ class Note(models.Model):
     dead_line = models.DateTimeField()
     only_authorized = models.BooleanField(default=False)
     # False Всем True только авторизованным
+    to_comment = models.ForeignKey('self', on_delete=models.CASCADE, related_name='comments', null=True, db_index=True)
     
     objects = NoteManager()
 

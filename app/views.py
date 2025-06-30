@@ -5,8 +5,11 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from django.utils import timezone
 from rest_framework import exceptions
+from django.shortcuts import get_object_or_404
 
 from django.contrib.auth import login, logout
+
+from .pagination import CommentPagination
 
 from .models import Note
 from .serializer import (
@@ -49,6 +52,49 @@ class NoteAPI(ModelViewSet):
 
         return note
 
+class CommentList(APIView):
+    pagination_class = CommentPagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, *args, **kwargs):
+        """
+        Возвращает список комментариев к заметке с возможностью:
+        - Получить только количество (`count-comments=1`)
+        - Пагинацию
+        """
+        note_id = kwargs.get('pk')
+        
+        # 1. Получение заметки или 404
+        note = get_object_or_404(Note.objects.all(), note_id=note_id)
+
+        # 2. Определение queryset в зависимости от авторизации пользователя
+        now = timezone.now()
+        user = request.user
+
+        if user.is_authenticated:
+            queryset = note.comments.filter(dead_line__gt=now)
+        else:
+            queryset = note.comments.filter(
+                dead_line__gt=now,
+                only_authorized=False
+            )
+
+        # 3. Обработка параметра count-comments
+        count_only = self._is_count_only_requested(request)
+        if count_only:
+            return Response({'count': queryset.count()}, status=status.HTTP_200_OK)
+
+        # 4. Пагинация и сериализация
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = NoteSerializer(page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
+
+    def _is_count_only_requested(self, request):
+        """Проверяет, нужно ли вернуть только количество комментариев."""
+        value = request.query_params.get('count-comments', '').strip().lower()
+        return value in ['1', 'true']
 
 # Регистрация пользователя
 class RegView(APIView):
