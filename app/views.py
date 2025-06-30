@@ -20,6 +20,64 @@ from .serializer import (
 )
 
 
+class RandomNote(APIView):
+    """
+    API-представление для получения случайной заметки.
+
+    Возвращает случайно выбранную актуальную заметку, соответствующую следующим условиям:
+    - Срок действия заметки не истёк (поле `dead_line` больше текущего времени).
+    - Для анонимных пользователей возвращаются только те заметки, которые не требуют авторизации.
+    - Предусмотрена возможность выбора: возвращать только заметки или также допускаются комментарии — 
+      через параметр запроса `is-comment`.
+
+    Параметры запроса:
+        is-comment: str ("1", "true")
+            - Если указан, в результат могут попасть и комментарии, прошедшие фильтрацию.
+            - Если не указан, будут возвращены только основные заметки.
+    """
+
+    def get(self, request, *args, **kwargs):
+        """
+        Обрабатывает GET-запрос и возвращает случайную заметку, соответствующую критериям.
+
+        :param request: Объект запроса от DRF
+        :return: Response с данными найденной заметки или сообщением об отсутствии подходящих записей.
+        """
+        now = timezone.now()
+        user = request.user
+
+        # Формируем queryset в зависимости от статуса авторизации пользователя
+        if user.is_authenticated:
+            queryset = Note.objects.filter(dead_line__gt=now)
+        else:
+            queryset = Note.objects.filter(dead_line__gt=now, only_authorized=False)
+
+        # Если параметр is-comment не разрешён, исключаем комментарии из выборки
+        if not self._is_comment_allowed(request):
+            queryset = queryset.filter(to_comment=None)
+
+        # Получаем случайную запись
+        random_note = queryset.order_by('?').first()
+
+        if not random_note:
+            return Response(
+                {"detail": "Не найдено ни одной заметки, соответствующей заданным критериям."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = NoteSerializer(random_note)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def _is_comment_allowed(self, request):
+        """
+        Проверяет, разрешено ли включать комментарии в результаты выборки.
+
+        :param request: Объект запроса от DRF
+        :return: bool — True, если комментарии разрешены
+        """
+        is_comment = request.query_params.get("is-comment", "").strip().lower()
+        return is_comment in ['1', 'true']
+        
 # Работа с заметками
 class NoteAPI(ModelViewSet):
     serializer_class = NoteSerializer
@@ -110,7 +168,6 @@ class RegView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 # Авторизация пользователя
 class LoginView(APIView):
     def post(self, request):
@@ -121,7 +178,6 @@ class LoginView(APIView):
             return Response({"message": "Вход выполнен успешно"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "Incorrect authorization data"}, status=status.HTTP_400_BAD_REQUEST)
-
 
 # Выход из аккаунта
 class LogoutView(APIView):
@@ -158,7 +214,6 @@ class UpdateAccountView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 # Удаление аккаунта
 class DeleteAccountView(APIView):
