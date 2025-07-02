@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from rest_framework import exceptions
 from django.shortcuts import get_object_or_404
+from .permissions import IsOwnerOrReadOnly
 
 from django.contrib.auth import login, logout
 
@@ -81,7 +82,7 @@ class RandomNote(APIView):
 # Работа с заметками
 class NoteAPI(ModelViewSet):
     serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
