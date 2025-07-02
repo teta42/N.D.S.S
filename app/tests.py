@@ -275,7 +275,6 @@ class CommentTest(APITestCase):
             content="Основная заметка",
             dead_line="2025-12-31T23:59:59Z",
             only_authorized=False,
-            read_only=False
         )
 
         # Создаем несколько комментариев к этой заметке

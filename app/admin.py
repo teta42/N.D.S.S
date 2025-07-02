@@ -3,8 +3,8 @@ from .models import Note, CustomUser
 
 @admin.register(Note)
 class NoteAdmin(admin.ModelAdmin):
-    list_display = ('note_id', 'user', 'created_at', 'read_only', 'dead_line', 'only_authorized')
-    list_filter = ('read_only', 'only_authorized', 'user')  # фильтры справа
+    list_display = ('note_id', 'user', 'created_at', 'dead_line', 'only_authorized')
+    list_filter = ('only_authorized', 'user')  # фильтры справа
     search_fields = ('note_id', 'content')  # поля для поиска
     ordering = ('-created_at',)
 
