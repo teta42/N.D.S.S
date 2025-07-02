@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 
 from .models import Note, CustomUser
-
+from .models import INFINITY
 
 # Сериализатор заметок
 class NoteSerializer(serializers.ModelSerializer):
@@ -20,7 +20,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
         content = validated_data.get("content")
         read_only = validated_data.get("read_only", True)
-        dead_line = validated_data.get("dead_line")
+        dead_line = validated_data.get("dead_line", INFINITY)
         only_authorized = validated_data.get("only_authorized", False)
         to_comment = validated_data.get("to_comment", "null")
 
