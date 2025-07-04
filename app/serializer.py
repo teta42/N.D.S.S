@@ -21,14 +21,16 @@ class NoteSerializer(serializers.ModelSerializer):
         content = validated_data.get("content")
         dead_line = validated_data.get("dead_line", INFINITY)
         only_authorized = validated_data.get("only_authorized", False)
-        to_comment = validated_data.get("to_comment", "null")
+        to_comment = validated_data.get("to_comment", None)
+        burn_after_read = validated_data.get("burn_after_read", False)
 
         return Note.objects.create_note(
             user=user,
             content=content,
             dead_line=dead_line,
             only_authorized=only_authorized,
-            to_comment=to_comment
+            to_comment=to_comment,
+            burn_after_read=burn_after_read
         )
 
     def update(self, instance, validated_data):
@@ -36,6 +38,7 @@ class NoteSerializer(serializers.ModelSerializer):
         instance.dead_line = validated_data.get("dead_line", instance.dead_line)
         instance.only_authorized = validated_data.get("only_authorized", instance.only_authorized)
         instance.to_comment = validated_data.get("to_comment", instance.to_comment)
+        instance.burn_after_read = validated_data.get("burn_after_read", instance.burn_after_read)
         instance.save()
         return instance
 
