@@ -88,17 +88,14 @@ class NoteAPI(ModelViewSet):
         user = self.request.user
         now = timezone.now()
         if user and user.is_authenticated:
-            return Note.objects.filter(user=user, dead_line__gt=now)
+            return Note.objects.filter(user=user, dead_line__gt=now, is_burned=False)
         else:
-            return Note.objects.filter(dead_line__gt=now, only_authorized=False)
+            return Note.objects.filter(dead_line__gt=now, only_authorized=False, is_burned=False)
 
     def get_object(self):
         user = self.request.user
         note_id = self.kwargs['pk']
-        try:
-            note = Note.objects.get(note_id=note_id)
-        except Note.DoesNotExist:
-            raise exceptions.NotFound("Note not found.")
+        note = get_object_or_404(Note.objects.all(), note_id=note_id, is_burned=False)
         
         # Проверка: актуальность заметки
         if note.dead_line <= timezone.now():
@@ -109,6 +106,10 @@ class NoteAPI(ModelViewSet):
             if not (user and user.is_authenticated):
                 raise exceptions.PermissionDenied("This note is for authorized users only.")
 
+        note.is_burned = True
+        
+        note.save(update_fields=['is_burned'])
+        
         return note
 
 class CommentList(APIView):
