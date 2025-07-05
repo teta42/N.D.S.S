@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: meilisearch-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: meilisearch
+    app.kubernetes.io/name: meilisearch
+    app.kubernetes.io/part-of: meilisearch
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/version: "0.1"
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      # Убедитесь, что порт называется правильно
+      port: http  # см. ниже, нужно изменить!
+  namespaceSelector:
+    matchNames:
+      - meili-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: meilisearch
+      app.kubernetes.io/instance: meilisearch

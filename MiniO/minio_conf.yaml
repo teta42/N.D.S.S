@@ -1,0 +1,145 @@
+# minio-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio
+---
+# minio-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+# minio-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: minio
+  labels:
+    app: minio
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        args:
+        - server
+        - /data
+        - "--console-address=:9001"
+        env:
+        - name: MINIO_ROOT_USER
+          value: "minioadmin"
+        - name: MINIO_ROOT_PASSWORD
+          value: "minioadmin"
+        ports:
+        - containerPort: 9000
+          name: minio
+        - containerPort: 9001
+          name: console
+        volumeMounts:
+        - name: storage
+          mountPath: "/data"
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: minio-pvc
+---
+# minio-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: minio
+  labels:
+    app: minio
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: minio
+spec:
+  type: ClusterIP
+  ports:
+    - name: minio
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+  selector:
+    app: minio
+---
+# minio-headless-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-headless
+  namespace: minio
+  labels:
+    app: minio
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: minio
+
+spec:
+  clusterIP: None
+  ports:
+    - name: minio
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: minio
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/component: stored
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/part-of: mibio
+    app.kubernetes.io/managed-by: yaml
+    app.kubernetes.io/version: "0.1"
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+    - interval: 30s
+      path: /minio/prometheus/metrics
+      # Убедитесь, что порт называется правильно
+      port: minio  # см. ниже, нужно изменить!
+  namespaceSelector:
+    matchNames:
+      - minio
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: meilisearch
+      app.kubernetes.io/instance: meilisearch

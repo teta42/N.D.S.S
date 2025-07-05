@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drf-app
+  labels:
+    app: drf-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drf-app
+  template:
+    metadata:
+      labels:
+        app: drf-app
+    spec:
+      containers:
+      - name: drf-app-container
+        image: drf-app:latest
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drf-app-service
+  labels:
+    app: drf-app
+spec:
+  selector:
+    app: drf-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

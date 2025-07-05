@@ -1,0 +1,151 @@
+# Here we use https://github.com/prometheus-community/helm-charts/charts/kube-prometheus-stack
+# Please keep the ServiceMonitor's label same as the Helm release name of kube-prometheus-stack 
+
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: acid-minimal-cluster
+  namespace: postgres-operator
+  labels:
+    app: test-pg
+spec:
+  teamId: "acid"
+  volume:
+    size: 1Gi
+  numberOfInstances: 2
+  users:
+    zalando:  # database owner
+    - superuser
+    - createdb
+    foo_user: []  # role for application foo
+  databases:
+    foo: zalando  # dbname: owner
+  preparedDatabases:
+    bar: {}
+  postgresql:
+    version: "13"
+  sidecars:
+    - name: "exporter"
+      image: "quay.io/prometheuscommunity/postgres-exporter:v0.15.0"
+      ports:
+        - name: exporter
+          containerPort: 9187
+          protocol: TCP
+      env:
+        - name: DATA_SOURCE_URI
+          value: ":5432/?sslmode=disable"
+        - name: DATA_SOURCE_USER
+          value: "postgres"
+        - name: DATA_SOURCE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: postgres.acid-minimal-cluster.credentials.postgresql.acid.zalan.do
+              key: password
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: acid-minimal-cluster-svc-metrics-master
+  namespace: postgres-operator
+  labels:
+    app: test-pg
+    spilo-role: master
+  annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9187"
+spec:
+  type: ClusterIP
+  ports:
+    - name: exporter
+      port: 9187
+      targetPort: exporter
+  selector:
+    application: spilo
+    cluster-name: acid-minimal-cluster
+    spilo-role: master
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: acid-minimal-cluster-svc-metrics-replica
+  namespace: postgres-operator
+  labels:
+    app: test-pg
+    spilo-role: replica
+  annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9187"
+spec:
+  type: ClusterIP
+  ports:
+    - name: exporter
+      port: 9187
+      targetPort: exporter
+  selector:
+    application: spilo
+    cluster-name: acid-minimal-cluster
+    spilo-role: replica
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: acid-minimal-cluster-svcm-master
+  namespace: postgres-operator
+  labels:
+    app: test-pg
+    spilo-role: master
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+    - port: exporter
+      interval: 15s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - postgres-operator
+  selector:
+    matchLabels:
+      app: test-pg
+      spilo-role: master
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: acid-minimal-cluster-svcm-replica
+  namespace: postgres-operator
+  labels:
+    app: test-pg
+    spilo-role: replica
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+    - port: exporter
+      interval: 15s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - postgres-operator
+  selector:
+    matchLabels:
+      app: test-pg
+      spilo-role: replica
+
+--- # мой сервис для мастера
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: acid-minimal-cluster-master
+  namespace: postgres-operator
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+  selector:
+    application: spilo
+    cluster-name: acid-minimal-cluster
+    spilo-role: master

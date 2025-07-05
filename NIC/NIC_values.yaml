@@ -1,0 +1,35 @@
+controller:
+  replicaCount: 1
+
+
+  service:
+    enabled: true  # Включает создание Service
+    type: NodePort
+    ports:
+      http: 80
+      https: 443
+    # Добавляем аннотации для Prometheus (опционально)
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "10254"  # Порт метрик ingress-nginx
+
+  metrics:
+    enabled: true  # Включаем экспорт метрик
+    serviceMonitor:
+      enabled: true  # Включаем создание ServiceMonitor
+      namespace: monitoring  # Namespace, куда установлен Prometheus
+      # Критически важные настройки:
+      additionalLabels:
+        release: kube-prometheus-stack  # Связь с установленным Prometheus Stack
+      interval: 30s  # Частота сбора метрик
+      scrapeTimeout: 10s
+      # Селектор меток Service (должен совпадать с labels сервиса ingress-nginx)
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+          app.kubernetes.io/instance: ingress-nginx
+          app.kubernetes.io/component: controller
+      # Порт метрик (должен совпадать с портом в сервисе)
+      endpoint:
+        port: metrics  # Имя порта, а не число!
+        path: /metrics  # Путь к метрикам

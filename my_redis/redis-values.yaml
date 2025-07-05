@@ -1,0 +1,53 @@
+# values.yaml
+
+## Глобальные параметры
+global:
+  redis:
+    password: "your-strong-password"  # Установите надежный пароль
+  storageClass: "standard"  # Укажите ваш StorageClass
+
+## Архитектура Redis (standalone или replication)
+architecture: replication
+
+## Аутентификация
+auth:
+  enabled: true
+  password: "your-strong-password"  # Дублируем пароль для ясности
+
+## Конфигурация мастера
+master:
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: "standard"
+    accessModes:
+      - ReadWriteOnce
+  service:
+    type: ClusterIP
+    nodePorts:
+      redis: ""  # Оставьте пустым для автоматического выбора
+
+## Конфигурация реплик
+replica:
+  replicaCount: 2  # Количество реплик
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: "standard"
+    accessModes:
+      - ReadWriteOnce
+
+## Метрики Prometheus
+metrics:
+  enabled: true
+  service:
+    type: ClusterIP
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9121"
+  serviceMonitor:
+    enabled: true  # Включено для интеграции с kube-prometheus-stack
+    interval: 30s
+    namespace: monitoring  # Укажите namespace, где установлен kube-prometheus-stack
+    additionalLabels:
+      release: kube-prometheus-stack  # Укажите имя вашего релиза kube-prometheus-stack

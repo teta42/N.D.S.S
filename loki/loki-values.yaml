@@ -1,0 +1,21 @@
+# Конфигурация Loki
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem # Использование файловой системы для хранения данных [[7]]
+  schemaConfig:
+    configs:
+      - from: 2020-10-24
+        store: boltdb-shipper
+        object_store: filesystem # Хранение объектов на локальной ФС [[6]]
+        schema: v11
+        index:
+          prefix: loki_index_
+          period: 24h
+  storage_config:
+    boltdb_shipper:
+      active_index_directory: /var/loki/boltdb-shipper-active # Путь к индексам [[9]]
+      cache_location: /var/loki/boltdb-shipper-cache # Локальный кэш [[9]]
+      shared_store: filesystem # Общее хранилище на основе ФС [[6]]
