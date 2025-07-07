@@ -22,13 +22,6 @@ prometheus:
     # Дополнительно: если нужно указать аннотации или селекторы
     # annotations: {}
     # labels: {}
-  ingress:
-      enabled: true
-      hosts:
-        - "prometheus.localdev.me"
-      ingressClassName: nginx # или другой класс, если используется
-      annotations:
-        nginx.ingress.kubernetes.io/rewrite-target: /
 
 defaultRules:
   rules:
@@ -41,13 +34,6 @@ grafana:
     size: 1Gi
   initChownData:
     enabled: false
-  ingress:
-    enabled: true
-    hosts:
-      - "grafana.localdev.me"
-    ingressClassName: nginx # опционально
-    annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: /
 
 # Если prometheus-adapter поддерживается (обычно нет)
 prometheus-adapter:

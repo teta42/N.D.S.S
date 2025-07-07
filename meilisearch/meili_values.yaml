@@ -12,19 +12,3 @@ persistence:
   storageClass: standard
   size: 1Gi
   accessMode: ReadWriteOnce
-
-# Включаем создание Ingress
-ingress:
-  # -- Enable ingress controller resource
-  enabled: true
-  # -- Ingress ingressClassName
-  className: nginx
-  # -- Ingress annotations
-  annotations:
-    {}
-    # kubernetes.io/ingress.class: nginx
-  # -- Path within the host
-  path: /
-  # -- List of hostnames
-  hosts:
-    - meilisearch.localdev.me
