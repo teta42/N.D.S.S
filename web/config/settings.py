@@ -75,12 +75,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# TODO поменять на secret 
+password = 'YDKIJvzCFTqdbmx2xxR061JN5kRws0y6Dk1keSuEJYAX9iKUYhQUzjFnUD6ecq1B'
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'zalando',
+        'PASSWORD': password,
+        'HOST': 'acid-minimal-cluster-master.postgres-operator.svc.cluster.local',  # имя сервиса мастера
+        'PORT': '5432',
+    },
+    'replica': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'zalando',
+        'PASSWORD': password,
+        'HOST': 'acid-minimal-cluster-repl.postgres-operator.svc.cluster.local',  # имя сервиса реплики
+        'PORT': '5432',
+    },
 }
+
 
 
 # Password validation
@@ -172,3 +188,6 @@ STATICFILES_DIRS = [
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+DATABASE_ROUTERS = ['config.db_router.MasterReplicaRouter']
