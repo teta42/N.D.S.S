@@ -1,27 +1,34 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-ingress
+  name: drf-ingress
   namespace: default
   labels:
     app: drf-app
-    app.kubernetes.io/instance: my-app
+    app.kubernetes.io/instance: drf-app
     app.kubernetes.io/managed-by: yaml
-    app.kubernetes.io/part-of: myapp
+    app.kubernetes.io/part-of: drfapp
     app.kubernetes.io/version: 0.0.0
     heritage: yaml
     release: kube-prometheus-stack
   annotations:
-    meta.helm.sh/release-name: myapp
+    meta.helm.sh/release-name: drfapp
     meta.helm.sh/release-namespace: default
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Убираем rewrite, он не нужен
 spec:
   ingressClassName: nginx
   rules:
-    - host: app.localdev.me
+    - host: localhost
       http:
         paths:
-          - path: /
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: drf-app-service
+                port:
+                  number: 80
+          - path: /admin/
             pathType: Prefix
             backend:
               service:

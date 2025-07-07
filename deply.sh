@@ -31,7 +31,7 @@ kubectl apply -f postgreSQL/cluster-conf.yaml
 kubectl apply -f postgreSQL/HPA.yaml
 
 
-kubectl apply -f NIC/ingress_test.yaml
+kubectl apply -f NIC/ingress_drf.yaml
 kubectl apply -f Promiteus/KEDA_HPA.yaml
 kubectl apply -f app.yaml
 
