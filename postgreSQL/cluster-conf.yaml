@@ -4,7 +4,7 @@
 apiVersion: "acid.zalan.do/v1"
 kind: postgresql
 metadata:
-  name: acid-minimal-cluster
+  name: postgresql-cluster
   namespace: postgres-operator
   labels:
     app: test-pg
@@ -17,9 +17,13 @@ spec:
     zalando:  # database owner
     - superuser
     - createdb
+    root:
+    - superuser
+    - createdb
     foo_user: []  # role for application foo
   databases:
     foo: zalando  # dbname: owner
+    ndss: root
   preparedDatabases:
     bar: {}
   postgresql:
@@ -39,7 +43,7 @@ spec:
         - name: DATA_SOURCE_PASS
           valueFrom:
             secretKeyRef:
-              name: postgres.acid-minimal-cluster.credentials.postgresql.acid.zalan.do
+              name: postgres.postgresql-cluster.credentials.postgresql.acid.zalan.do
               key: password
 
 ---
@@ -47,7 +51,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: acid-minimal-cluster-svc-metrics-master
+  name: postgresql-cluster-svc-metrics-master
   namespace: postgres-operator
   labels:
     app: test-pg
@@ -63,13 +67,13 @@ spec:
       targetPort: exporter
   selector:
     application: spilo
-    cluster-name: acid-minimal-cluster
+    cluster-name: postgresql-cluster
     spilo-role: master
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: acid-minimal-cluster-svc-metrics-replica
+  name: postgresql-cluster-svc-metrics-replica
   namespace: postgres-operator
   labels:
     app: test-pg
@@ -85,13 +89,13 @@ spec:
       targetPort: exporter
   selector:
     application: spilo
-    cluster-name: acid-minimal-cluster
+    cluster-name: postgresql-cluster
     spilo-role: replica
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: acid-minimal-cluster-svcm-master
+  name: postgresql-cluster-svcm-master
   namespace: postgres-operator
   labels:
     app: test-pg
@@ -113,7 +117,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: acid-minimal-cluster-svcm-replica
+  name: postgresql-cluster-svcm-replica
   namespace: postgres-operator
   labels:
     app: test-pg
@@ -137,7 +141,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: acid-minimal-cluster-master
+  name: postgresql-cluster-master
   namespace: postgres-operator
 spec:
   type: ClusterIP
@@ -147,5 +151,5 @@ spec:
       targetPort: 5432
   selector:
     application: spilo
-    cluster-name: acid-minimal-cluster
+    cluster-name: postgresql-cluster
     spilo-role: master

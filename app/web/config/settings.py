@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,24 +77,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# TODO поменять на secret 
-password = 'YDKIJvzCFTqdbmx2xxR061JN5kRws0y6Dk1keSuEJYAX9iKUYhQUzjFnUD6ecq1B'
+db_user = os.getenv("POSTGRES_USERNAME")
+db_pass = os.getenv("POSTGRES_PASSWORD")
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'zalando',
-        'PASSWORD': password,
-        'HOST': 'acid-minimal-cluster-master.postgres-operator.svc.cluster.local',  # имя сервиса мастера
+        'USER': db_user,
+        'PASSWORD': db_pass,
+        'HOST': 'postgresql-cluster-master.postgres-operator.svc.cluster.local',  # имя сервиса мастера
         'PORT': '5432',
     },
     'replica': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'zalando',
-        'PASSWORD': password,
-        'HOST': 'acid-minimal-cluster-repl.postgres-operator.svc.cluster.local',  # имя сервиса реплики
+        'USER': db_user,
+        'PASSWORD': db_pass,
+        'HOST': 'postgresql-cluster-repl.postgres-operator.svc.cluster.local',  # имя сервиса реплики
         'PORT': '5432',
     },
 }
@@ -177,7 +179,6 @@ LOGGING = {
 }
 
 
-import os
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")  # путь куда будет собрана статика

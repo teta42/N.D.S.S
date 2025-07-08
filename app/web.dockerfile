@@ -18,6 +18,8 @@ RUN python -m pip install --upgrade pip && \
 
 RUN python manage.py collectstatic --noinput
 
+RUN mkdir /app/staticfiles
+
 # Создаем пользователя без пароля
 RUN adduser --uid 5678 --disabled-password --gecos "" appuser && \
     chown -R appuser /app
