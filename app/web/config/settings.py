@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "storages",
     'app',
     'rest_framework',
 ]
@@ -192,3 +193,17 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 DATABASE_ROUTERS = ['config.db_router.MasterReplicaRouter']
+
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_S3_ADDRESSING_STYLE = "path"  # обязательно для MinIO
+AWS_S3_VERIFY = False 
+
+AWS_S3_ENDPOINT_URL = "http://minio.minio.svc.cluster.local:9000"  # URL твоего MinIO
+AWS_ACCESS_KEY_ID = "zN6cH9TZeuCN4sO43Jbd"
+AWS_SECRET_ACCESS_KEY = "fFwlVxXLCYS6iORO7MBiW6bNBOQoyQwIzXKRmsdK"
+AWS_STORAGE_BUCKET_NAME = "content"
+
+AWS_S3_FILE_OVERWRITE = True
+AWS_QUERYSTRING_AUTH = False  # чтобы не было временных URL

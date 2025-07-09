@@ -4,25 +4,29 @@ from django.contrib.auth import authenticate
 from .models import Note, CustomUser
 from .models import INFINITY
 
+from django.core.files.base import ContentFile
+
 # Сериализатор заметок
 class NoteSerializer(serializers.ModelSerializer):
+    content = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = Note
         fields = "__all__"
         extra_kwargs = {
             "note_id": {"read_only": True},
             "created_at": {"read_only": True},
-            "read_count": {"read_only": True},
+            "dead_line": {"required": False},
         }
-        
+
     def create(self, validated_data):
         user = self.context["request"].user
 
-        content = validated_data.get("content")
-        dead_line = validated_data.get("dead_line", INFINITY)
-        only_authorized = validated_data.get("only_authorized", False)
-        to_comment = validated_data.get("to_comment", None)
-        burn_after_read = validated_data.get("burn_after_read", False)
+        content = validated_data.pop("content")
+        dead_line = validated_data.pop("dead_line", INFINITY)
+        only_authorized = validated_data.pop("only_authorized", False)
+        to_comment = validated_data.pop("to_comment", None)
+        burn_after_read = validated_data.pop("burn_after_read", False)
 
         return Note.objects.create_note(
             user=user,
@@ -34,13 +38,31 @@ class NoteSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        instance.content = validated_data.get("content", instance.content)
+        content = validated_data.get("content")
+        if content is not None:
+            filename = f"{instance.note_id}.txt"
+            instance.content = ContentFile(content.encode("utf-8"), name=filename)
+
         instance.dead_line = validated_data.get("dead_line", instance.dead_line)
         instance.only_authorized = validated_data.get("only_authorized", instance.only_authorized)
         instance.to_comment = validated_data.get("to_comment", instance.to_comment)
         instance.burn_after_read = validated_data.get("burn_after_read", instance.burn_after_read)
+
         instance.save()
         return instance
+
+    def to_representation(self, instance):
+        """Возвращаем content как строку"""
+        rep = super().to_representation(instance)
+        try:
+            if instance.content:
+                with instance.content.open() as f:
+                    rep["content"] = f.read().decode("utf-8")
+            else:
+                rep["content"] = ""
+        except Exception:
+            rep["content"] = None
+        return rep
 
 
 # Регистрация пользователя

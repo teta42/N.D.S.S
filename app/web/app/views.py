@@ -105,8 +105,9 @@ class NoteAPI(ModelViewSet):
         if note.only_authorized:
             if not (user and user.is_authenticated):
                 raise exceptions.PermissionDenied("This note is for authorized users only.")
-
-        note.is_burned = True
+            
+        if note.burn_after_read == True:
+            note.is_burned = True
         
         note.save(update_fields=['is_burned'])
         

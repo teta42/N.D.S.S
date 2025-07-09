@@ -4,6 +4,9 @@ djangorestframework==3.16.0
 sqlparse==0.5.3
 psycopg[binary]
 
+boto3==1.39.3
+django-storages==1.14.6
+
 whitenoise==6.9.0
 
 

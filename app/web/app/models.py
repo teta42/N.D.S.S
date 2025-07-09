@@ -2,8 +2,10 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext as _
 from datetime import datetime
+from django.utils import timezone
+from django.core.files.base import ContentFile
 
-INFINITY = datetime(9999, 12, 31)
+INFINITY = timezone.make_aware(datetime(9999, 12, 31))
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email=None, user_id=None, password=None, **extra_fields):
@@ -55,6 +57,8 @@ class NoteManager(BaseUserManager):
         
         is_burned = False
         
+        content = ContentFile(content.encode("utf-8"), name=f"{id}.txt")
+        
         note = self.model(note_id=id,user=user, 
                           content=content,
                           dead_line=dead_line,only_authorized=only_authorized, 
@@ -67,7 +71,7 @@ class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
+    content = models.FileField(upload_to='')
     dead_line = models.DateTimeField(default=INFINITY)
     only_authorized = models.BooleanField(default=False)
     # False Всем True только авторизованным
