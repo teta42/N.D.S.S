@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,15 +32,16 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    #'app.apps.AppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "storages",
     'app',
     'rest_framework',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -195,14 +195,14 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DATABASE_ROUTERS = ['config.db_router.MasterReplicaRouter']
 
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_S3_ADDRESSING_STYLE = "path"  # обязательно для MinIO
 AWS_S3_VERIFY = False 
 
 AWS_S3_ENDPOINT_URL = "http://minio.minio.svc.cluster.local:9000"  # URL твоего MinIO
-AWS_ACCESS_KEY_ID = "zN6cH9TZeuCN4sO43Jbd"
-AWS_SECRET_ACCESS_KEY = "fFwlVxXLCYS6iORO7MBiW6bNBOQoyQwIzXKRmsdK"
+AWS_ACCESS_KEY_ID = "minioadmin"
+AWS_SECRET_ACCESS_KEY = "minioadmin"
 AWS_STORAGE_BUCKET_NAME = "content"
 
 AWS_S3_FILE_OVERWRITE = True

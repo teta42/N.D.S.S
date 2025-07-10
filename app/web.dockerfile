@@ -1,31 +1,26 @@
 FROM python:3-slim
 
-# Отключаем создание .pyc файлов
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Отключаем буферизацию вывода (для логов)
 ENV PYTHONUNBUFFERED=1
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем содержимое папки web (убедись, что в ней есть requirements.txt и код)
 COPY web/ /app/
 
-# Устанавливаем зависимости
+# Установка зависимостей
 RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
-RUN python manage.py collectstatic --noinput
-
-RUN mkdir /app/staticfiles
-
-# Создаем пользователя без пароля
+# Создаем пользователя
 RUN adduser --uid 5678 --disabled-password --gecos "" appuser && \
     chown -R appuser /app
 
-# Переключаемся на этого пользователя
 USER appuser
 
-# Команда запуска приложения (важно: gunicorn требует exec-формат и правильные кавычки)
+# Собираем статику уже от имени appuser, чтобы не было проблем с правами
+RUN python manage.py collectstatic --noinput
+
+# Создаем директорию под статику
+RUN mkdir -p /app/staticfiles
+
 CMD ["gunicorn", "-c", "gunicorn_config.py", "config.wsgi:application"]

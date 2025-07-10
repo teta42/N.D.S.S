@@ -17,6 +17,7 @@ kubectl apply -f meilisearch/ServiceMonitor.yaml
 
 kubectl apply -f MiniO/minio_conf.yaml 
 
+
 helm upgrade --install loki grafana/loki-stack \
   --namespace loki \
   --values loki/loki-values.yaml --create-namespace
@@ -33,7 +34,7 @@ kubectl apply -f postgreSQL/HPA.yaml
 
 kubectl apply -f NIC/ingress_drf.yaml
 kubectl apply -f Promiteus/KEDA_HPA.yaml
-kubectl apply -f app.yaml
+kubectl apply -f app/app.yaml
 
 kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 5000:80 & \
 # kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 & \

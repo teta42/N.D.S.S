@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 from datetime import datetime
 from django.utils import timezone
 from django.core.files.base import ContentFile
+from storages.backends.s3boto3 import S3Boto3Storage
 
 INFINITY = timezone.make_aware(datetime(9999, 12, 31))
 
@@ -71,7 +72,7 @@ class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
     note_id = models.CharField(max_length=7, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    content = models.FileField(upload_to='')
+    content = models.FileField(upload_to='', storage=S3Boto3Storage())
     dead_line = models.DateTimeField(default=INFINITY)
     only_authorized = models.BooleanField(default=False)
     # False Всем True только авторизованным
