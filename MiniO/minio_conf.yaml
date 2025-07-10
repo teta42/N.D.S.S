@@ -1,3 +1,5 @@
+#TODO Добавить хранение важных данных в secret
+
 # minio-namespace.yaml
 apiVersion: v1
 kind: Namespace

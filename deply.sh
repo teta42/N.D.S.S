@@ -12,6 +12,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --create-namespace \
   --values NIC/NIC_values.yaml
 
+kubectl apply -f meilisearch/secret.yaml
 helm upgrade --install meilisearch meilisearch/meilisearch -n meili-system --create-namespace -f meilisearch/meili_values.yaml
 kubectl apply -f meilisearch/ServiceMonitor.yaml
 
@@ -34,6 +35,8 @@ kubectl apply -f postgreSQL/HPA.yaml
 
 kubectl apply -f NIC/ingress_drf.yaml
 kubectl apply -f Promiteus/KEDA_HPA.yaml
+
+kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml
 
 kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 5000:80 & \

@@ -13,7 +13,7 @@ spec:
   volume:
     size: 1Gi
   numberOfInstances: 2
-  users:
+  users: #TODO Поставить пароли пользователям и хранить их в secret
     zalando:  # database owner
     - superuser
     - createdb

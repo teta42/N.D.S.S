@@ -209,7 +209,6 @@ AWS_S3_FILE_OVERWRITE = True
 AWS_QUERYSTRING_AUTH = False  # чтобы не было временных URL
 
 
-
-MEILISEARCH_URL = "http://localhost:7700"
-MEILISEARCH_API_KEY = "masterKey"
-MEILISEARCH_INDEX_NAME = "documents"
+MEILISEARCH_URL = "http://meilisearch.meili-system.svc.cluster.local:7700"
+MEILISEARCH_API_KEY = os.getenv("MEILI_MASTER_KEY")
+MEILISEARCH_INDEX_NAME = "notes"

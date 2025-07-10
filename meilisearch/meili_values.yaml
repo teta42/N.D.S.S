@@ -1,3 +1,8 @@
+existingSecret:
+  enabled: true
+  secretName: meilisearch-secret
+  key: MEILI_MASTER_KEY
+
 # Включаем создание Service
 service:
   enabled: true

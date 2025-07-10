@@ -32,6 +32,13 @@ spec:
               name: root.postgresql-cluster.credentials.postgresql.acid.zalan.do
               key: password
               optional: false
+        - name: MEILI_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: meilisearch-secret
+              key: MEILI_MASTER_KEY
+              optional: false
+
 ---
 apiVersion: v1
 kind: Service
