@@ -20,6 +20,8 @@ from .serializer import (
     UserUpdateSerializer,
 )
 
+class SearchNote(APIView):
+    pass
 
 class RandomNote(APIView):
     """

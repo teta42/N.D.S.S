@@ -11,7 +11,7 @@ INFINITY = timezone.make_aware(datetime(9999, 12, 31))
 class CustomUserManager(BaseUserManager):
     def create_user(self, email=None, user_id=None, password=None, **extra_fields):
         if user_id is None:
-            from key import create_id
+            from web.util.key import create_id
             user_id = create_id()
 
         if email != None:
@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
-        from key import create_id
+        from web.util.key import create_id
         user_id = create_id()
         return self.create_user(email, user_id=user_id, password=password, **extra_fields)
 
@@ -53,7 +53,7 @@ class NoteManager(BaseUserManager):
                     burn_after_read:bool=False) -> object:
         
         # Создание id
-        from key import create_id
+        from web.util.key import create_id
         id = create_id()
         
         is_burned = False
