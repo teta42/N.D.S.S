@@ -11,7 +11,7 @@ INFINITY = timezone.make_aware(datetime(9999, 12, 31))
 class CustomUserManager(BaseUserManager):
     def create_user(self, email=None, user_id=None, password=None, **extra_fields):
         if user_id is None:
-            from web.util.key import create_id
+            from util.key import create_id
             user_id = create_id()
 
         if email != None:
@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
-        from web.util.key import create_id
+        from util.key import create_id
         user_id = create_id()
         return self.create_user(email, user_id=user_id, password=password, **extra_fields)
 
@@ -53,7 +53,7 @@ class NoteManager(BaseUserManager):
                     burn_after_read:bool=False) -> object:
         
         # Создание id
-        from web.util.key import create_id
+        from util.key import create_id
         id = create_id()
         
         is_burned = False
@@ -84,6 +84,19 @@ class Note(models.Model):
 
     def __str__(self):
         return self.note_id     # Возвращает индефикатор заметки при выводе
+    
+    @property
+    def get_content_text(self) -> str:
+        try:
+            if not self.content:
+                return ""
+            with self.content.open('r') as f:
+                return f.read()  # уже str
+        except Exception as e:
+            print(f"[read error] {e}")
+            return ''
+
+
     
     class Meta:
         ordering = ['-created_at']  # Сортировка по дате создания (новые заметки первыми)

@@ -11,8 +11,6 @@ COPY web/ /app/
 RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
-RUN pip install meilisearch==0.36.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-
 # Создаем пользователя
 RUN adduser --uid 5678 --disabled-password --gecos "" appuser && \
     chown -R appuser /app

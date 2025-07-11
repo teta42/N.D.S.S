@@ -1,6 +1,6 @@
 import meilisearch
 from django.conf import settings
-from meilisearch.errors import MeiliSearchApiError
+from meilisearch.errors import MeilisearchApiError
 
 def create_meilisearch_client() -> meilisearch.Client:
     url = getattr(settings, "MEILISEARCH_URL", None)
@@ -9,11 +9,10 @@ def create_meilisearch_client() -> meilisearch.Client:
 
     client = meilisearch.Client(url, api_key)
 
-    # Проверяем наличие индекса
     try:
         index = client.index(index_name)
-        index.get_raw_info()
-    except MeiliSearchApiError:
+        index.get_settings()
+    except MeilisearchApiError:
         client.create_index(uid=index_name, options={"primaryKey": "id"})
         index = client.index(index_name)
 
@@ -21,7 +20,7 @@ def create_meilisearch_client() -> meilisearch.Client:
     task1 = index.update_searchable_attributes(["content"])
     index.wait_for_task(task1.task_uid)
 
-    task2 = index.update_displayed_attributes(["id"])
+    task2 = index.update_displayed_attributes(["id", "content"])
     index.wait_for_task(task2.task_uid)
 
     return client

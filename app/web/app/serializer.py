@@ -52,17 +52,11 @@ class NoteSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        """Возвращаем content как строку"""
+        """Возвращаем content как строку, через метод модели"""
         rep = super().to_representation(instance)
-        try:
-            if instance.content:
-                with instance.content.open() as f:
-                    rep["content"] = f.read().decode("utf-8")
-            else:
-                rep["content"] = ""
-        except Exception:
-            rep["content"] = None
+        rep["content"] = instance.get_content_text
         return rep
+
 
 
 # Регистрация пользователя
