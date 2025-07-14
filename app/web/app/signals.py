@@ -13,18 +13,19 @@ def delete_file_on_model_delete(sender, instance, **kwargs):
         instance.content.delete(save=False)
 
 @receiver(post_save, sender=Note) #TODO Добавить проверку на публичность заметки
-def mymodel_post_save(sender, instance, created, **kwargs):
+def loading_content_into_a_search_engine(sender, instance, created, **kwargs):
     if created:
-        client = create_meilisearch_client()
-        
-        index = client.index(index_name)
-        
-        documents = {"id": instance.note_id, "content": instance.get_content_text}
-        
-        response = index.add_documents(documents)
+        if instance.is_public:
+            client = create_meilisearch_client()
+            
+            index = client.index(index_name)
+            
+            documents = {"id": instance.note_id, "content": instance.get_content_text}
+            
+            response = index.add_documents(documents)
 
-        # Ожидаем завершения задачи
-        client.wait_for_task(response.task_uid)
+            # Ожидаем завершения задачи
+            client.wait_for_task(response.task_uid)
     else:
         #TODO переделать под celery
         print(f"Объект обновлён: {instance}")

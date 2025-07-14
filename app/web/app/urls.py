@@ -9,6 +9,7 @@ from .views import (
     DeleteAccountView,
     CommentList,
     RandomNote,
+    SearchNote
 )
 
 router = routers.DefaultRouter()
@@ -16,6 +17,7 @@ router.register(r'notes', NoteAPI, basename='notes')
 
 urlpatterns = [
     # Специфичные пути выше
+    path('notes/search/', SearchNote.as_view(), name="search"),
     path('notes/random/', RandomNote.as_view(), name='random-note'),
     path('notes/<str:pk>/comments/', CommentList.as_view(), name='get_comments'),
     

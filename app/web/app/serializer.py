@@ -17,6 +17,7 @@ class NoteSerializer(serializers.ModelSerializer):
             "note_id": {"read_only": True},
             "created_at": {"read_only": True},
             "dead_line": {"required": False},
+            "is_public": {"required": False}
         }
 
     def create(self, validated_data):
@@ -27,6 +28,7 @@ class NoteSerializer(serializers.ModelSerializer):
         only_authorized = validated_data.pop("only_authorized", False)
         to_comment = validated_data.pop("to_comment", None)
         burn_after_read = validated_data.pop("burn_after_read", False)
+        is_public = validated_data.pop("is_public", False)
 
         return Note.objects.create_note(
             user=user,
@@ -34,7 +36,8 @@ class NoteSerializer(serializers.ModelSerializer):
             dead_line=dead_line,
             only_authorized=only_authorized,
             to_comment=to_comment,
-            burn_after_read=burn_after_read
+            burn_after_read=burn_after_read,
+            is_public=is_public
         )
 
     def update(self, instance, validated_data):
@@ -47,6 +50,7 @@ class NoteSerializer(serializers.ModelSerializer):
         instance.only_authorized = validated_data.get("only_authorized", instance.only_authorized)
         instance.to_comment = validated_data.get("to_comment", instance.to_comment)
         instance.burn_after_read = validated_data.get("burn_after_read", instance.burn_after_read)
+        instance.is_public = validated_data.get("is_public", instance.is_public)
 
         instance.save()
         return instance

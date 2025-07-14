@@ -3,14 +3,19 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.request import Request
 from django.utils import timezone
 from rest_framework import exceptions
 from django.shortcuts import get_object_or_404
 from .permissions import IsOwnerOrReadOnly
+from util.meilisearch import get_meilisearch_index
+from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError
+import logging
+from typing import Any
 
 from django.contrib.auth import login, logout
 
-from .pagination import CommentPagination
+from .pagination import CommentPagination, SearchNotePagination
 
 from .models import Note
 from .serializer import (
@@ -20,8 +25,104 @@ from .serializer import (
     UserUpdateSerializer,
 )
 
+logger = logging.getLogger(__name__)
+
+
 class SearchNote(APIView):
-    pass
+    """
+    Обрабатывает GET-запрос для поиска заметок по ключевому слову.
+
+    Использует Meilisearch для полнотекстового поиска.
+    Результаты возвращаются с пагинацией через DRF пагинатор.
+
+    Query-параметры:
+    - `q` (str): строка поиска (обязательный параметр)
+    - `limit` (int): количество элементов на страницу (опционально)
+    - `offset` (int): смещение в списке результатов (опционально)
+    """
+
+    pagination_class = SearchNotePagination
+
+    def get(self, request: Request) -> Response:
+        """
+        Обработка GET-запроса на поиск.
+
+        :param request: объект запроса DRF
+        :return: JSON-ответ с результатами поиска и мета-информацией пагинации
+        """
+        query: str = request.query_params.get("q", "").strip()
+
+        if not query:
+            logger.warning("Отсутствует обязательный параметр 'q'")
+            return Response(
+                {"error": "Missing required query parameter 'q'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        paginator = self.pagination_class()
+
+        try:
+            # Получаем значения limit и offset
+            limit: int = paginator.get_limit(request)
+            offset: int = paginator.get_offset(request)
+
+            if limit is None or offset is None:
+                logger.warning(f"Некорректные параметры пагинации: limit={limit}, offset={offset}")
+                return Response(
+                    {"error": "Invalid pagination parameters"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            index = get_meilisearch_index()
+
+            logger.debug(f"Выполняется поиск: query='{query}', limit={limit}, offset={offset}")
+
+            # Выполняем поиск
+            result: dict[str, Any] = index.search(query, {
+                "offset": offset,
+                "limit": limit
+            })
+
+            hits: list[dict[str, Any]] = result.get("hits", [])
+            total_hits: int = result.get("estimatedTotalHits", 0)
+
+            # Используем DRF-пагинацию вручную
+            page = paginator.paginate_queryset(hits, request, view=self)
+
+            if page is None:
+                logger.warning("Paginator вернул None — вероятно, ошибка в параметрах")
+                return Response(
+                    {"error": "Pagination failed"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            # Встраиваем общее количество найденных записей
+            response = paginator.get_paginated_response(page)
+            response.data["total_hits"] = total_hits
+
+            logger.info(f"Поиск выполнен успешно: найдено {total_hits} записей")
+            return response
+
+        except MeilisearchApiError as e:
+            logger.exception("Ошибка Meilisearch API при поиске")
+            return Response(
+                {"error": f"Meilisearch API error: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        except MeilisearchCommunicationError as e:
+            logger.exception("Ошибка связи с Meilisearch")
+            return Response(
+                {"error": "Cannot connect to Meilisearch"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        except Exception as e:
+            logger.exception("Непредвиденная ошибка при поиске")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 class RandomNote(APIView):
     """
@@ -39,7 +140,7 @@ class RandomNote(APIView):
             - Если не указан, будут возвращены только основные заметки.
     """
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """
         Обрабатывает GET-запрос и возвращает случайную заметку, соответствующую критериям.
 
@@ -119,7 +220,7 @@ class CommentList(APIView):
     pagination_class = CommentPagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """
         Возвращает список комментариев к заметке с возможностью:
         - Получить только количество (`count-comments=1`)
@@ -161,7 +262,7 @@ class CommentList(APIView):
 
 # Регистрация пользователя
 class RegView(APIView):
-    def post(self, request):
+    def post(self, request: Request):
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -175,7 +276,7 @@ class RegView(APIView):
 
 # Авторизация пользователя
 class LoginView(APIView):
-    def post(self, request):
+    def post(self, request: Request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         if serializer.is_valid(raise_exception=True):
             user = serializer.validated_data["user"]
@@ -188,7 +289,7 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request: Request):
         logout(request)
         return Response({"message": "Выход выполнен успешно"}, status=status.HTTP_200_OK)
 
@@ -196,7 +297,7 @@ class LogoutView(APIView):
 class UpdateAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request):
+    def put(self, request: Request):
         # Полное обновление: все поля обязательны (кроме тех, что указаны как required=False)
         serializer = UserUpdateSerializer(
             request.user, 
@@ -208,7 +309,7 @@ class UpdateAccountView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request):
+    def patch(self, request: Request):
         # Частичное обновление: только указанные поля
         serializer = UserUpdateSerializer(
             request.user, 
@@ -224,7 +325,7 @@ class UpdateAccountView(APIView):
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request):
+    def delete(self, request: Request):
         user = request.user
         user.delete()
         return Response({"message": "Аккаунт удален"}, status=status.HTTP_204_NO_CONTENT)

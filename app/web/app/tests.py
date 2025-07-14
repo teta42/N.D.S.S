@@ -5,6 +5,15 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from .models import Note
+from django.apps import apps
+
+import meilisearch
+
+from .models import Note
+from util.meilisearch import (
+    create_meilisearch_client,
+    get_meilisearch_index,
+)
 
 
 User = get_user_model()
@@ -317,3 +326,111 @@ class CommentTest(APITestCase):
         invalid_url = reverse('get_comments', args=['invalidid'])
         response = self.client.get(invalid_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+# class SearchNoteTest(APITestCase):
+#     """
+#     Тестирует функциональность Meilisearch-интеграции и SearchNote API.
+#     """
+
+#     @classmethod
+#     def setUpTestData(cls):
+#         cls.client = APIClient()
+#         cls.index_name = "Test"
+#         cls.test_documents = [
+#             {"id": "1", "content": "Django is a web framework"},
+#             {"id": "2", "content": "Meilisearch is fast"},
+#             {"id": "3", "content": "Full-text search is useful"},
+#         ]
+
+#     def setUp(self):
+#         # Создание индекса и добавление документов
+#         self.client_instance = create_meilisearch_client()
+#         try:
+#             self.client_instance.delete_index(self.index_name)
+#         except Exception:
+#             pass  # индекс может не существовать — не критично
+
+#         self.client_instance.create_index(uid=self.index_name, options={"primaryKey": "id"})
+#         index = self.client_instance.index(self.index_name)
+#         index.update_searchable_attributes(["content"])
+#         index.update_displayed_attributes(["id", "content"])
+#         task = index.add_documents(self.test_documents)
+#         index.wait_for_task(task.task_uid)
+
+#     def tearDown(self):
+#         # Удаление тестового индекса Meilisearch
+#         try:
+#             self.client_instance.delete_index(self.index_name)
+#         except Exception:
+#             pass
+
+#         # Удаление всех записей из всех моделей в тестовой БД
+#         for model in apps.get_models():
+#             model.objects.all().delete()
+
+#     def test_client_creation(self):
+#         """
+#         Проверяет успешное создание клиента Meilisearch.
+#         """
+#         client = create_meilisearch_client()
+#         self.assertIsInstance(client, meilisearch.Client)
+
+#     def test_index_creation_and_settings(self):
+#         """
+#         Проверяет, что индекс существует и имеет правильные настройки.
+#         """
+#         index = get_meilisearch_index(index_name=self.index_name)
+#         self.assertEqual(index.uid, self.index_name)
+
+#         settings_ = index.get_settings()
+#         self.assertEqual(settings_["searchableAttributes"], ["content"])
+#         self.assertEqual(settings_["displayedAttributes"], ["id", "content"])
+
+#     def test_add_and_delete_documents(self):
+#         """
+#         Проверяет добавление и удаление документов.
+#         """
+#         index = get_meilisearch_index()
+
+#         doc = {"id": "999", "content": "Temporary entry"}
+#         task = index.add_documents([doc])
+#         index.wait_for_task(task.task_uid)
+
+#         result = index.search("Temporary")
+#         self.assertEqual(len(result["hits"]), 1)
+
+#         task = index.delete_document("999")
+#         index.wait_for_task(task.task_uid)
+
+#         result = index.search("Temporary")
+#         self.assertEqual(len(result["hits"]), 0)
+
+#     def test_api_success(self):
+#         """
+#         Проверяет успешный ответ от API при валидном запросе.
+#         """
+#         url = reverse("search")
+#         response = self.client.get(url, {"q": "search", "limit": 2, "offset": 0})
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.assertIn("results", response.data)
+#         self.assertIn("total_hits", response.data)
+
+#     def test_api_missing_query_param(self):
+#         """
+#         Проверяет ошибку при отсутствии параметра 'q'.
+#         """
+#         url = reverse("search")
+#         response = self.client.get(url)
+#         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+#         self.assertEqual(response.data["error"], "Missing required query parameter 'q'")
+
+#     def test_api_large_offset(self):
+#         """
+#         Проверяет поведение при выходе offset за пределы количества документов.
+#         """
+#         url = reverse("search")
+#         response = self.client.get(url, {"q": "django", "limit": 10, "offset": 1000})
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.assertEqual(len(response.data["results"]), 0)
+
+

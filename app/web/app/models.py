@@ -50,7 +50,7 @@ class NoteManager(BaseUserManager):
     def create_note(self, user:object, content:str, 
                     only_authorized:bool, 
                     to_comment:str=None, dead_line:str=INFINITY,
-                    burn_after_read:bool=False) -> object:
+                    burn_after_read:bool=False, is_public:bool=False) -> object:
         
         # Создание id
         from util.key import create_id
@@ -63,7 +63,8 @@ class NoteManager(BaseUserManager):
         note = self.model(note_id=id,user=user, 
                           content=content,
                           dead_line=dead_line,only_authorized=only_authorized, 
-                          to_comment=to_comment, burn_after_read=burn_after_read, is_burned=is_burned)
+                          to_comment=to_comment, burn_after_read=burn_after_read, is_burned=is_burned,
+                          is_public=is_public)
         
         note.save(using=self._db)
         return note
@@ -79,6 +80,7 @@ class Note(models.Model):
     to_comment = models.ForeignKey('self', on_delete=models.CASCADE, related_name='comments', null=True, db_index=True)
     burn_after_read = models.BooleanField(default=False)
     is_burned = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False)
     
     objects = NoteManager()
 
