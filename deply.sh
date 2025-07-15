@@ -40,10 +40,10 @@ kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml
 
 kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 5000:80 & \
-# kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 & \
-# kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 & \
-# kubectl port-forward --namespace meili-system svc/meilisearch 7700:7700 & \
-# kubectl port-forward -n minio svc/minio 9001:9001 & \
+kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 & \
+kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 & \
+kubectl port-forward --namespace meili-system svc/meilisearch 7700:7700 & \
+kubectl port-forward -n minio svc/minio 9001:9001 & \
 curl \
   -X PATCH 'meilisearch.localdev.me:5000/experimental-features/' \
   -H 'Content-Type: application/json' \

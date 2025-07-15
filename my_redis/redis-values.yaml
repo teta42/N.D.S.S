@@ -3,16 +3,16 @@
 ## Глобальные параметры
 global:
   redis:
-    password: "your-strong-password"  # Установите надежный пароль
-  storageClass: "standard"  # Укажите ваш StorageClass
+    password: "your-strong-password"
+  storageClass: "standard"
 
-## Архитектура Redis (standalone или replication)
+
 architecture: replication
 
 ## Аутентификация
 auth:
   enabled: true
-  password: "your-strong-password"  # Дублируем пароль для ясности
+  password: "your-strong-password" 
 
 ## Конфигурация мастера
 master:
@@ -25,11 +25,11 @@ master:
   service:
     type: ClusterIP
     nodePorts:
-      redis: ""  # Оставьте пустым для автоматического выбора
+      redis: ""  
 
-## Конфигурация реплик
+
 replica:
-  replicaCount: 2  # Количество реплик
+  replicaCount: 2
   persistence:
     enabled: true
     size: 8Gi
@@ -48,6 +48,6 @@ metrics:
   serviceMonitor:
     enabled: true  # Включено для интеграции с kube-prometheus-stack
     interval: 30s
-    namespace: monitoring  # Укажите namespace, где установлен kube-prometheus-stack
+    namespace: monitoring
     additionalLabels:
-      release: kube-prometheus-stack  # Укажите имя вашего релиза kube-prometheus-stack
+      release: kube-prometheus-stack

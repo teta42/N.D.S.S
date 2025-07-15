@@ -6,6 +6,9 @@ psycopg[binary]
 
 meilisearch==0.36.0
 
+redis==6.0.0
+django-redis==6.0.0
+
 boto3==1.39.3
 django-storages==1.14.6
 

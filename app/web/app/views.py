@@ -1,3 +1,5 @@
+import hashlib
+import json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -12,6 +14,8 @@ from util.meilisearch import get_meilisearch_index
 from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError
 import logging
 from typing import Any
+from util.cache import wcache, rcache
+from util.norm import normalize_string
 
 from django.contrib.auth import login, logout
 
@@ -26,7 +30,6 @@ from .serializer import (
 )
 
 logger = logging.getLogger(__name__)
-
 
 class SearchNote(APIView):
     """
@@ -44,14 +47,8 @@ class SearchNote(APIView):
     pagination_class = SearchNotePagination
 
     def get(self, request: Request) -> Response:
-        """
-        Обработка GET-запроса на поиск.
-
-        :param request: объект запроса DRF
-        :return: JSON-ответ с результатами поиска и мета-информацией пагинации
-        """
         query: str = request.query_params.get("q", "").strip()
-
+        
         if not query:
             logger.warning("Отсутствует обязательный параметр 'q'")
             return Response(
@@ -62,7 +59,6 @@ class SearchNote(APIView):
         paginator = self.pagination_class()
 
         try:
-            # Получаем значения limit и offset
             limit: int = paginator.get_limit(request)
             offset: int = paginator.get_offset(request)
 
@@ -73,22 +69,32 @@ class SearchNote(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            index = get_meilisearch_index()
+            # Формируем ключ кэша
+            raw_key = f"{normalize_string(query)}:{limit}:{offset}"
+            cache_key = hashlib.md5(raw_key.encode("utf-8")).hexdigest()
 
-            logger.debug(f"Выполняется поиск: query='{query}', limit={limit}, offset={offset}")
+            # Пробуем достать результат из кэша
+            cached_result = rcache().get(cache_key)
+            if cached_result:
+                logger.info(f"Кэш найден по ключу: {cache_key}")
+                result = json.loads(cached_result)
+            else:
+                index = get_meilisearch_index()
+                logger.debug(f"Выполняется поиск: query='{query}', limit={limit}, offset={offset}")
 
-            # Выполняем поиск
-            result: dict[str, Any] = index.search(query, {
-                "offset": offset,
-                "limit": limit
-            })
+                result: dict[str, Any] = index.search(query, {
+                    "offset": offset,
+                    "limit": limit
+                })
 
-            hits: list[dict[str, Any]] = result.get("hits", [])
-            total_hits: int = result.get("estimatedTotalHits", 0)
+                # Сохраняем результат в Redis
+                wcache().set(cache_key, json.dumps(result), timeout=60*5)
+                logger.info(f"Результат закэширован с ключом: {cache_key}")
 
-            # Используем DRF-пагинацию вручную
+            hits = result.get("hits", [])
+            total_hits = result.get("estimatedTotalHits", 0)
+
             page = paginator.paginate_queryset(hits, request, view=self)
-
             if page is None:
                 logger.warning("Paginator вернул None — вероятно, ошибка в параметрах")
                 return Response(
@@ -96,11 +102,9 @@ class SearchNote(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-            # Встраиваем общее количество найденных записей
             response = paginator.get_paginated_response(page)
             response.data["total_hits"] = total_hits
 
-            logger.info(f"Поиск выполнен успешно: найдено {total_hits} записей")
             return response
 
         except MeilisearchApiError as e:

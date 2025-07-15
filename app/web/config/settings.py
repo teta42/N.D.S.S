@@ -168,12 +168,22 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "INFO",
+        "level": "DEBUG",
     },
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "INFO",
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "meilisearch": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "propagate": False,
         },
     },
@@ -212,3 +222,22 @@ AWS_QUERYSTRING_AUTH = False  # чтобы не было временных URL
 MEILISEARCH_URL = "http://meilisearch.meili-system.svc.cluster.local:7700"
 MEILISEARCH_API_KEY = os.getenv("MEILI_MASTER_KEY")
 MEILISEARCH_INDEX_NAME = "notes"
+
+
+CACHES = {
+    "write_cache": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "read_cache": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:your-strong-password@my-redis-replicas.redis.svc.cluster.local:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
