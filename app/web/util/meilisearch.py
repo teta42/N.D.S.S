@@ -8,7 +8,7 @@ from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationErro
 from django.conf import settings
 import meilisearch.index
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("myapp")
 
 @lru_cache(maxsize=1)
 def create_meilisearch_client() -> meilisearch.Client:

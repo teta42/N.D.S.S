@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django.utils import timezone
-from rest_framework import exceptions
+from rest_framework import exceptions, request as drf_request
 from django.shortcuts import get_object_or_404
 from .permissions import IsOwnerOrReadOnly
 from util.meilisearch import get_meilisearch_index
@@ -29,7 +29,7 @@ from .serializer import (
     UserUpdateSerializer,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("myapp")
 
 class SearchNote(APIView):
     """
@@ -186,40 +186,107 @@ class RandomNote(APIView):
         is_comment = request.query_params.get("is-comment", "").strip().lower()
         return is_comment in ['1', 'true']
         
-# Работа с заметками
 class NoteAPI(ModelViewSet):
+    """
+    API для работы с заметками.
+    
+    Поддерживает просмотр заметок с учётом срока действия, авторизации и флага burn_after_read.
+    Использует кэш Redis для повышения производительности.
+    """
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
-    def get_queryset(self):
-        user = self.request.user
-        now = timezone.now()
-        if user and user.is_authenticated:
-            return Note.objects.filter(user=user, dead_line__gt=now, is_burned=False)
-        else:
-            return Note.objects.filter(dead_line__gt=now, only_authorized=False, is_burned=False)
+    def get_queryset(self) -> Any:
+        """
+        Возвращает набор заметок, доступных текущему пользователю.
+        Учитываются: авторизация, срок действия и статус удаления (is_burned).
+        """
+        try:
+            user = self.request.user
+            now = timezone.now()
 
-    def get_object(self):
-        user = self.request.user
-        note_id = self.kwargs['pk']
-        note = get_object_or_404(Note.objects.all(), note_id=note_id, is_burned=False)
-        
-        # Проверка: актуальность заметки
-        if note.dead_line <= timezone.now():
-            raise exceptions.NotFound("Note has expired.")
+            if user and user.is_authenticated:
+                return Note.objects.filter(user=user, dead_line__gt=now, is_burned=False)
+            else:
+                return Note.objects.filter(dead_line__gt=now, only_authorized=False, is_burned=False)
 
-        # Проверка доступа к конкретной заметке
-        if note.only_authorized:
-            if not (user and user.is_authenticated):
+        except Exception as e:
+            logger.exception("Ошибка в get_queryset: %s", str(e))
+            raise exceptions.APIException("Ошибка при получении списка заметок")
+
+    def get_object(self) -> Note:
+        """
+        Получает конкретную заметку с учётом:
+        - срока действия (dead_line)
+        - доступа (only_authorized)
+        - удаления при прочтении (burn_after_read)
+        """
+        try:
+            user = self.request.user
+            note_id = self.kwargs.get('pk')
+
+            # Поиск заметки
+            note = get_object_or_404(Note.objects.all(), note_id=note_id, is_burned=False)
+
+            # Проверка срока действия
+            if note.dead_line <= timezone.now():
+                logger.warning(f"Заметка {note_id} просрочена.")
+                raise exceptions.NotFound("Note has expired.")
+
+            # Проверка доступа
+            if note.only_authorized and not (user and user.is_authenticated):
+                logger.warning(f"Неавторизованный доступ к защищённой заметке {note_id}")
                 raise exceptions.PermissionDenied("This note is for authorized users only.")
-            
-        if note.burn_after_read == True:
-            note.is_burned = True
-        
-        note.save(update_fields=['is_burned'])
-        
-        return note
 
+            # Автоматическое сгорание заметки после прочтения
+            if note.burn_after_read:
+                note.is_burned = True
+                note.save(update_fields=['is_burned'])
+                logger.info(f"Заметка {note_id} была сожжена после прочтения.")
+
+            return note
+
+        except exceptions.APIException:
+            raise  # Уже логировано выше
+        except Exception as e:
+            logger.exception("Неизвестная ошибка в get_object: %s", str(e))
+            raise exceptions.APIException("Ошибка при получении заметки")
+
+    def retrieve(self, request: drf_request.Request, *args: Any, **kwargs: Any) -> Response:
+        """
+        Получает одну заметку:
+        - Сначала пытается взять её из кэша (если нет флага burn_after_read)
+        - Если не найдено — извлекает из БД через get_object()
+        - Кладёт в кэш на 10 минут, если не требует сгорания после чтения
+        """
+        try:
+            note_id = self.kwargs.get("pk")
+            cache_key = f"note:{note_id}"
+
+            # Проверка в кэше
+            cached_data = rcache().get(cache_key)
+            if cached_data is not None:
+                logger.info(f"Заметка {note_id} найдена в кэше.")
+                return Response(cached_data)
+
+            # Если нет в кэше — достаём из БД
+            note = self.get_object()
+            serializer = self.get_serializer(note)
+            data = serializer.data
+
+            # Кэшируем только если не сжигается после прочтения
+            if not note.burn_after_read:
+                wcache().set(cache_key, data, timeout=600)  # 10 минут
+                logger.info(f"Заметка {note_id} закэширована.")
+
+            return Response(data)
+
+        except exceptions.APIException:
+            raise
+        except Exception as e:
+            logger.exception("Неизвестная ошибка в retrieve: %s", str(e))
+            raise exceptions.APIException("Ошибка при получении заметки")
+    
 class CommentList(APIView):
     pagination_class = CommentPagination
     permission_classes = [IsAuthenticatedOrReadOnly]

@@ -151,7 +151,6 @@ REST_FRAMEWORK = {
     ],
     'UNAUTHENTICATED_USER': None,
     'UNAUTHENTICATED_TOKEN': None,
-    
 }
 
 USE_L10N = True
@@ -168,22 +167,43 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": "WARNING",  # Только WARNING и выше
     },
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "ERROR",  # Только критические ошибки Django
+            "propagate": False,
+        },
+        "django.template": {
+            "handlers": ["console"],
+            "level": "ERROR",  # Только ошибки шаблонов
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "ERROR",  # Только ошибки БД, никаких SQL запросов
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",  # Только ошибки HTTP запросов (4xx, 5xx)
             "propagate": False,
         },
         "meilisearch": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "ERROR",  # Только ошибки Meilisearch
             "propagate": False,
         },
         "celery": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "ERROR",  # Только ошибки Celery
+            "propagate": False,
+        },
+        # Ваши собственные логи
+        "myapp": {  # Замените на название вашего приложения
+            "handlers": ["console"],
+            "level": "DEBUG",  # Все ваши логи в полном объеме
             "propagate": False,
         },
     },
@@ -225,6 +245,13 @@ MEILISEARCH_INDEX_NAME = "notes"
 
 
 CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
     "write_cache": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0",
@@ -240,4 +267,5 @@ CACHES = {
         }
     }
 }
+
 

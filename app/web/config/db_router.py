@@ -1,5 +1,5 @@
 import logging, sys
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("myapp")
 
 class MasterReplicaRouter:
     def db_for_read(self, model, **hints):

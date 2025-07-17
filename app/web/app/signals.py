@@ -4,7 +4,7 @@ from .models import Note
 import logging
 from util.meilisearch import get_meilisearch_index
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("myapp")
 
 #TODO переделать под celery
 @receiver(post_delete, sender=Note)
