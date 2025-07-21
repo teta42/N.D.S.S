@@ -16,6 +16,8 @@ import logging
 from typing import Any
 from util.cache import wcache, rcache
 from util.norm import normalize_string
+from util.check_note import check_note
+from django.utils.dateparse import parse_datetime
 
 from django.contrib.auth import login, logout
 
@@ -228,15 +230,7 @@ class NoteAPI(ModelViewSet):
             # Поиск заметки
             note = get_object_or_404(Note.objects.all(), note_id=note_id, is_burned=False)
 
-            # Проверка срока действия
-            if note.dead_line <= timezone.now():
-                logger.warning(f"Заметка {note_id} просрочена.")
-                raise exceptions.NotFound("Note has expired.")
-
-            # Проверка доступа
-            if note.only_authorized and not (user and user.is_authenticated):
-                logger.warning(f"Неавторизованный доступ к защищённой заметке {note_id}")
-                raise exceptions.PermissionDenied("This note is for authorized users only.")
+            check_note(note.dead_line, note.only_authorized, note.note_id, user)
 
             # Автоматическое сгорание заметки после прочтения
             if note.burn_after_read:
@@ -267,6 +261,12 @@ class NoteAPI(ModelViewSet):
             cached_data = rcache().get(cache_key)
             if cached_data is not None:
                 logger.info(f"Заметка {note_id} найдена в кэше.")
+                check_note(
+                    dead_line=parse_datetime(cached_data["dead_line"]),
+                    only_authorized=cached_data["only_authorized"],
+                    note_id=note_id,
+                    user=request.user
+                )
                 return Response(cached_data)
 
             # Если нет в кэше — достаём из БД

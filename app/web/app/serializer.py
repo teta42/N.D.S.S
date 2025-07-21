@@ -15,9 +15,14 @@ class NoteSerializer(serializers.ModelSerializer):
         fields = "__all__"
         extra_kwargs = {
             "note_id": {"read_only": True},
+            "user": {"read_only": True},
             "created_at": {"read_only": True},
+            "is_burned": {"read_only": True},
             "dead_line": {"required": False},
-            "is_public": {"required": False}
+            "is_public": {"required": False},
+            "only_authorized": {"required": False},
+            "to_comment": {"required": False},
+            "burn_after_read": {"required": False},
         }
 
     def create(self, validated_data):
