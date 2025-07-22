@@ -5,8 +5,11 @@ from datetime import datetime
 from django.utils import timezone
 from django.core.files.base import ContentFile
 from storages.backends.s3boto3 import S3Boto3Storage
+import logging
 
 INFINITY = timezone.make_aware(datetime(9999, 12, 31))
+
+logger = logging.getLogger("myapp")
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email=None, user_id=None, password=None, **extra_fields):
@@ -95,7 +98,7 @@ class Note(models.Model):
             with self.content.open('r') as f:
                 return f.read()  # уже str
         except Exception as e:
-            print(f"[read error] {e}")
+            logger.debug(f"[read error] {e}")
             return ''
 
 
