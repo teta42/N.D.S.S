@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  labels:
+    component: celery
+spec:
+  replicas: 2  # число воркеров Celery
+  selector:
+    matchLabels:
+      component: celery
+  template:
+    metadata:
+      labels:
+        component: celery
+    spec:
+      containers:
+        - name: celery
+          image: drf-app:latest
+          command: ["celery"]
+          args: ["-A", "config", "worker", "--loglevel=info"]
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+      restartPolicy: Always

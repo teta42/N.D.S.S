@@ -39,6 +39,8 @@ kubectl apply -f Promiteus/KEDA_HPA.yaml
 kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml
 
+kubectl apply -f celery/celery-worker-deployment.yaml
+
 kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 5000:80 & \
 kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 & \
 kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 & \

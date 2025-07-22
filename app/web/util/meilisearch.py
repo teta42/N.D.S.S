@@ -55,8 +55,10 @@ def get_meilisearch_index(index_name:str=None) -> meilisearch.index:
             logger.debug(f"Current Meilisearch index settings: {current_settings}")
         except MeilisearchApiError:
             logger.warning(f"Index '{index_name}' does not exist. Creating it.")
-            client.create_index(uid=index_name, options={"primaryKey": "id"})
+            task = client.create_index(uid=index_name, options={"primaryKey": "id"})
+            client.wait_for_task(task.task_uid)
             index = client.index(index_name)
+            current_settings = index.get_settings()
 
         # Применим настройки, только если они отличаются
         expected_searchable = ["id", "content"]

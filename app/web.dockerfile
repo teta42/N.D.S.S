@@ -1,26 +1,39 @@
-FROM python:3-slim
+FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    POETRY_VIRTUALENVS_CREATE=false
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Создание пользователя
+RUN adduser --uid 5678 --disabled-password --gecos "" appuser
 
 WORKDIR /app
 
-COPY web/ /app/
+# Сначала копируем зависимости отдельно — для кэша
+COPY web/requirements.txt ./
 
-# Установка зависимостей
-RUN python -m pip install --upgrade pip && \
-    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
-# Создаем пользователя
-RUN adduser --uid 5678 --disabled-password --gecos "" appuser && \
-    chown -R appuser /app
+# Копируем весь проект после установки зависимостей
+COPY web/ .
 
+# Смена владельца
+RUN chown -R appuser:appuser /app
+
+# Переключаемся на непривилегированного пользователя
 USER appuser
 
-# Собираем статику уже от имени appuser, чтобы не было проблем с правами
-RUN python manage.py collectstatic --noinput
+# collectstatic + подготовка директорий
+RUN mkdir -p /app/staticfiles \
+ && python manage.py collectstatic --noinput
 
-# Создаем директорию под статику
-RUN mkdir -p /app/staticfiles
-
+# По умолчанию запускаем gunicorn, но можешь переопределить через docker-compose
 CMD ["gunicorn", "-c", "gunicorn_config.py", "config.wsgi:application"]

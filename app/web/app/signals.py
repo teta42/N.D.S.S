@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from .models import Note
 import logging
 from util.meilisearch import get_meilisearch_index
-from tasks.base_tasks import delete_note_data, update_note_data_if_changed
+from tasks.base_tasks import delete_note_data, update_note_data_if_changed, update_private_note
 from .serializer import NoteSerializer
 
 logger = logging.getLogger("myapp")
@@ -33,3 +33,5 @@ def loading_content_into_a_search_engine(sender, instance, created, **kwargs):
         if instance.is_public:
             serializer = NoteSerializer(instance)
             update_note_data_if_changed.delay(instance.note_id, serializer.data)
+        else:
+            update_private_note.delay(instance.note_id, serializer.data)
