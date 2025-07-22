@@ -269,3 +269,11 @@ CACHES = {
 }
 
 
+# Redis как брокер
+CELERY_BROKER_URL = 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0'
+
+# Результаты задач (можно временно не использовать)
+CELERY_RESULT_BACKEND = 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/1'
+
+# Таймзона
+CELERY_TIMEZONE = 'UTC'

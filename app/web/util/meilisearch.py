@@ -59,7 +59,7 @@ def get_meilisearch_index(index_name:str=None) -> meilisearch.index:
             index = client.index(index_name)
 
         # Применим настройки, только если они отличаются
-        expected_searchable = ["content"]
+        expected_searchable = ["id", "content"]
         expected_displayed = ["id", "content"]
 
         update_needed = (
