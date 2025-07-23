@@ -5,7 +5,7 @@ metadata:
   labels:
     component: celery
 spec:
-  replicas: 2  # число воркеров Celery
+  replicas: 1  # число воркеров Celery
   selector:
     matchLabels:
       component: celery
