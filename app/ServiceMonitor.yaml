@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: drf-app-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/name: drf-app
+    app.kubernetes.io/instance: drf-app
+spec:
+  selector:
+    matchLabels:
+      app: drf-app
+  namespaceSelector:
+    matchNames:
+      - default  # Заменить, если Django в другом namespace
+  endpoints:
+    - port: metrics         # должно совпадать с именем порта из Service
+      path: /metrics
+      interval: 30s

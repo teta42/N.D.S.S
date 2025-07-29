@@ -4,6 +4,8 @@ djangorestframework==3.16.0
 sqlparse==0.5.3
 psycopg[binary]
 
+django-prometheus==2.4.1
+
 meilisearch==0.36.0
 
 redis==6.0.0

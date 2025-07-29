@@ -21,4 +21,5 @@ from app.urls import urlpatterns
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(urlpatterns)),
+    path("", include("django_prometheus.urls")),
 ]

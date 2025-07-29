@@ -53,3 +53,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
+    - name: metrics
+      protocol: TCP
+      port: 80
+      targetPort: 8000

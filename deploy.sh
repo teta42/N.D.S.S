@@ -70,6 +70,7 @@ echo "========================= 🚀 Развёртывание Приложен
 
 kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml
+kubectl apply -f app/ServiceMonitor.yaml
 kubectl apply -f celery/celery-worker-deployment.yaml
 
 echo "========================= 🚪 Port-forwarding сервисов ========================="
