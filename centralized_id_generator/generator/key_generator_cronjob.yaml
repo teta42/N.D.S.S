@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: key-generator-cronjob
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: key-generator
+            image: key-generator:latest
+            env:
+            - name: DB_NAME
+              value: "postgres"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: root.postgresql-cluster.credentials.postgresql.acid.zalan.do
+                  key: username
+                  optional: false
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: root.postgresql-cluster.credentials.postgresql.acid.zalan.do
+                  key: password
+                  optional: false
+            - name: DB_HOST
+              value: "postgresql-cluster-master.postgres-operator.svc.cluster.local"
+            - name: DB_PORT
+              value: "5432"
+            - name: REDIS_HOST
+              value: "my-redis-master.redis.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "0"
+            - name: REDIS_PASSWORD
+              value: "your-strong-password"
+            - name: PROMETHEUS_URL
+              value: "5"
+            - name: TIME_RESERVE
+              value: "300"
+            - name: KEY_LENGTH
+              value: "8"
+            - name: BUFFER_THRESHOLD
+              value: "100"
+            - name: MAX_ATTEMPTS
+              value: "5"
+          restartPolicy: OnFailure
