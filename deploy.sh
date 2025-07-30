@@ -66,7 +66,18 @@ echo "========================= 🌐 Настройка Ingress и KEDA ========
 kubectl apply -f NIC/ingress_drf.yaml
 kubectl apply -f Promiteus/KEDA_HPA.yaml
 
+echo "========================= Развёртывание центрального генератора ========================="
+
+docker build -f centralized_id_generator/storage/.dockerfile -t redis-cleaner:latest centralized_id_generator/storage
+kubectl apply -f centralized_id_generator/storage/cleanup-cronjob.yaml
+
+docker build -f centralized_id_generator/generator/.dockerfile -t key-generator:latest centralized_id_generator/generator
+kubectl apply -f centralized_id_generator/generator/key_generator_cronjob.yaml
+
 echo "========================= 🚀 Развёртывание Приложения ========================="
+
+docker build -f app/sidecar/.dockerfile -t flask-l2-cache:latest app/sidecar
+docker build -f app/web.dockerfile -t drf-app:latest app/
 
 kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml

@@ -39,6 +39,25 @@ spec:
               key: MEILI_MASTER_KEY
               optional: false
 
+      # 🔁 Flask Sidecar
+      - name: l2-sidecar
+        image: flask-l2-cache:latest
+        ports:
+        - containerPort: 8500
+        env:
+        - name: REDIS_URL
+          value: "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0"
+        - name: KEY_BATCH_SIZE
+          value: "20"
+        - name: L2_MIN_KEYS
+          value: "5"
+        - name: BUFFER_KEY_SET
+          value: "buffer_keys"
+        - name: USED_KEY_ZSET
+          value: "used_keys"
+        - name: FLASK_PORT
+          value: "8500"
+
 ---
 apiVersion: v1
 kind: Service
@@ -53,6 +72,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
+
     - name: metrics
       protocol: TCP
       port: 80

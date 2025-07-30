@@ -10,7 +10,7 @@ spec:
         spec:
           containers:
           - name: cleanup
-            image: your-registry/redis-cleaner:latest
+            image: redis-cleaner:latest
             env:
             - name: REDIS_HOST
               value: "my-redis-master.redis.svc.cluster.local"

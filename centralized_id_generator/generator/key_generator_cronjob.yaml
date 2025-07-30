@@ -39,11 +39,11 @@ spec:
             - name: REDIS_PASSWORD
               value: "your-strong-password"
             - name: PROMETHEUS_URL
-              value: "5"
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
             - name: TIME_RESERVE
               value: "300"
             - name: KEY_LENGTH
-              value: "8"
+              value: "5"
             - name: BUFFER_THRESHOLD
               value: "100"
             - name: MAX_ATTEMPTS

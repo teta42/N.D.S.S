@@ -14,8 +14,8 @@ logger = logging.getLogger("myapp")
 class CustomUserManager(BaseUserManager):
     def create_user(self, email=None, user_id=None, password=None, **extra_fields):
         if user_id is None:
-            from util.key import create_id
-            user_id = create_id()
+            from util.key import get_key_from_sidecar
+            user_id = get_key_from_sidecar()
 
         if email != None:
             email = self.normalize_email(email)
@@ -28,13 +28,13 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
-        from util.key import create_id
-        user_id = create_id()
+        from util.key import get_key_from_sidecar
+        user_id = get_key_from_sidecar()
         return self.create_user(email, user_id=user_id, password=password, **extra_fields)
 
 
 class CustomUser(AbstractUser):
-    user_id = models.CharField(max_length=7, primary_key=True)
+    user_id = models.CharField(primary_key=True)
     email = models.EmailField(_('email address'), blank=True, null=True, unique=False)
     
     objects = CustomUserManager()
@@ -56,8 +56,8 @@ class NoteManager(BaseUserManager):
                     burn_after_read:bool=False, is_public:bool=False) -> object:
         
         # Создание id
-        from util.key import create_id
-        id = create_id()
+        from util.key import get_key_from_sidecar
+        id = get_key_from_sidecar()
         
         is_burned = False
         
@@ -74,7 +74,7 @@ class NoteManager(BaseUserManager):
 
 class Note(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='note')
-    note_id = models.CharField(max_length=7, primary_key=True)
+    note_id = models.CharField(primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.FileField(upload_to='', storage=S3Boto3Storage())
     dead_line = models.DateTimeField(default=INFINITY)
