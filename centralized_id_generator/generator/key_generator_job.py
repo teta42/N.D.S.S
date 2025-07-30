@@ -11,10 +11,10 @@ y_gauge = Gauge('unique_yield', 'Доля успешных ключей')
 
 def get_current_y(prometheus_url: str) -> float:
     """
-    Получает текущее значение метрики y из Prometheus.
+    Получает среднее значение метрики y из Prometheus.
     """
     try:
-        query = 'unique_yield'
+        query = 'avg_over_time(unique_yield[5m])'
         response = requests.get(f"{prometheus_url}/api/v1/query", params={'query': query})
         result = response.json()
         if result['status'] == 'success' and result['data']['result']:
@@ -29,9 +29,11 @@ def get_current_y(prometheus_url: str) -> float:
 def get_current_load(prometheus_url: str) -> float:
     """
     Получает текущее значение нагрузки L из Prometheus.
+    L - количество POST запросов на URL создания заметки.
     """
     try:
-        query = 'note_creation_load'
+        # PromQL запрос для получения количества POST запросов на создание заметки
+        query = 'sum(rate(django_http_requests_total_by_view_transport_method_total{view="note-list", method="POST"}[5m])) * 300'
         response = requests.get(f"{prometheus_url}/api/v1/query", params={'query': query})
         result = response.json()
         if result['status'] == 'success' and result['data']['result']:
