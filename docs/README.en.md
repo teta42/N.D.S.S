@@ -6,7 +6,7 @@
 
 See [`README.md`](README.md)
 
-**Version:** 0.8.5
+**Version:** 0.9.5
 **Architecture:** Microservice-based
 **Purpose:** A service for storing and distributing notes
 **Note Format:** Text-based, with public access support
