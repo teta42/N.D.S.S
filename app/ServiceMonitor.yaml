@@ -13,8 +13,8 @@ spec:
       app: drf-app
   namespaceSelector:
     matchNames:
-      - default  # Заменить, если Django в другом namespace
+      - default
   endpoints:
-    - port: metrics         # должно совпадать с именем порта из Service
+    - port: metrics
       path: /metrics
       interval: 30s

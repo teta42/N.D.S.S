@@ -5,7 +5,7 @@ metadata:
   labels:
     app: drf-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: drf-app
@@ -57,6 +57,10 @@ spec:
           value: "used_keys"
         - name: FLASK_PORT
           value: "8500"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
 
 ---
 apiVersion: v1
@@ -69,10 +73,6 @@ spec:
   selector:
     app: drf-app
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
-
     - name: metrics
       protocol: TCP
       port: 80
