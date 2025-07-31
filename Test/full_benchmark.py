@@ -9,11 +9,9 @@ from datetime import datetime, timedelta
 BASE_URL = "http://localhost:5000/api"
 USERNAME = "user_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 PASSWORD = "testpassword123"
-NOTE_COUNT = 100  # сколько заметок создать
 
 session = requests.Session()
 
-# Добавим CSRF поддержку
 def update_csrf():
     r = session.get(f"{BASE_URL}/login/")
     if "csrftoken" in session.cookies:
@@ -43,12 +41,12 @@ def login():
 def create_note(i: int):
     update_csrf()
     data = {
-        "title": f"Test Note {i}",
-        "content": "Это содержимое заметки",  # ✅ это обязательно
-        "only_authorized": False,
-        "burn_after_read": False,
+        "title": f"Note {i} - {random.choice(['A', 'B', 'C', 'D'])}",
+        "content": ''.join(random.choices(string.ascii_letters + string.digits, k=100)),
+        "only_authorized": random.choice([True, False]),
+        "burn_after_read": random.choice([True, False]),
         "to_comment": None,
-        "is_public": False
+        "is_public": random.choice([True, False])
     }
     logger.debug(f"Создаём заметку {i}")
     response = session.post(f"{BASE_URL}/notes/", json=data)
@@ -56,8 +54,6 @@ def create_note(i: int):
         logger.error(f"Ошибка создания {i}: {response.status_code} — {response.text}")
     response.raise_for_status()
     return response.json().get("note_id")
-
-
 
 def read_note(note_id: str):
     logger.debug(f"Читаем заметку {note_id}")
@@ -71,20 +67,20 @@ def list_notes():
 
 def search_note():
     logger.debug("Поиск заметки")
-    r = session.get(f"{BASE_URL}/notes/search/?q=Test")
-    if r.status_code != 200 and r.status_code != 400:
+    r = session.get(f"{BASE_URL}/notes/search/?q=Note")
+    if r.status_code not in (200, 400):
         r.raise_for_status()
 
 def random_note():
     logger.debug("Случайная заметка")
     r = session.get(f"{BASE_URL}/notes/random/")
-    if r.status_code != 200 and r.status_code != 404:
+    if r.status_code not in (200, 404):
         r.raise_for_status()
 
 def comments(note_id: str):
     logger.debug("Комментарии к заметке")
     r = session.get(f"{BASE_URL}/notes/{note_id}/comments/")
-    if r.status_code != 200 and r.status_code != 404:
+    if r.status_code not in (200, 404):
         r.raise_for_status()
 
 def logout():
@@ -100,33 +96,41 @@ def run_load_test(duration_sec: int):
     login()
 
     note_ids = []
-    for i in range(NOTE_COUNT):
-        try:
-            note_id = create_note(i)
-            note_ids.append(note_id)
-        except Exception as e:
-            logger.error(f"Ошибка при создании заметки {i}: {e}")
-
     success = 0
     fail = 0
     total = 0
+    i = 0
 
     while time.time() < end_time:
         try:
-            action = random.choice([
-                lambda: list_notes(),
-                lambda: search_note(),
-                lambda: random_note(),
-                lambda: read_note(random.choice(note_ids)),
-                lambda: comments(random.choice(note_ids))
-            ])
-            action()
-            success += 1
+            note_id = create_note(i)
+            note_ids.append(note_id)
+
+            actions = [
+                list_notes,
+                search_note,
+                random_note,
+                lambda: read_note(note_id),
+                lambda: comments(note_id),
+            ]
+
+            for action in actions:
+                try:
+                    action()
+                    success += 1
+                except Exception as e:
+                    logger.warning(f"Ошибка при вызове URL: {e}")
+                    fail += 1
+                total += 1
+                time.sleep(0.1)
+
+            i += 1
+
         except Exception as e:
-            logger.warning(f"Ошибка запроса: {e}")
+            logger.error(f"Ошибка при создании заметки {i}: {e}")
             fail += 1
-        total += 1
-        time.sleep(0.1)
+            total += 1
+            time.sleep(0.2)
 
     logout()
 
