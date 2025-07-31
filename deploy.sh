@@ -73,6 +73,7 @@ kubectl apply -f centralized_id_generator/storage/cleanup-cronjob.yaml
 
 docker build -f centralized_id_generator/generator/.dockerfile -t key-generator:latest centralized_id_generator/generator
 kubectl apply -f centralized_id_generator/generator/key_generator_cronjob.yaml
+kubectl apply -f centralized_id_generator/generator/PodMonitor.yaml
 
 echo "========================= 🚀 Развёртывание Приложения ========================="
 

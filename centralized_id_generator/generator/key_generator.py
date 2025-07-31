@@ -182,7 +182,7 @@ def main():
 
         T = int(os.environ['TIME_RESERVE'])
         key_length = int(os.environ['KEY_LENGTH'])
-        N = int(os.environ['BUFFER_THRESHOLD'])
+        # N = int(os.environ['BUFFER_THRESHOLD'])
         MAX_ATTEMPTS = int(os.environ['MAX_ATTEMPTS'])
 
         # Запуск сервера для метрик
@@ -201,10 +201,18 @@ def main():
             redis_client.zrem('used_keys', '__init__')
             logger.info("🆕 Redis ZSET 'used_keys' был создан.")
 
-        # Проверка количества ключей в буфере
+        # Получение текущего количества ключей в Redis-буфере
         current_S = redis_client.scard('buffer_keys')
-        if current_S > N:
-            logger.info(f"Ключей в буфере ({current_S}) больше N ({N}), генерация не требуется.")
+
+        # Получение L и y из Prometheus
+        L = get_current_load(prometheus_url)
+        y = get_current_y(prometheus_url)
+        
+        G, Y = calculate_keys_to_generate(L, T, current_S, y)
+
+        # Проверка количества ключей в буфере
+        if current_S > G:
+            logger.info(f"Ключей в буфере ({current_S}) больше G ({G}), генерация не требуется.")
             return
 
         attempts = 0
@@ -213,10 +221,6 @@ def main():
 
         while attempts < MAX_ATTEMPTS:
             attempts += 1
-            # Получение L и y из Prometheus
-            L = get_current_load(prometheus_url)
-            y = get_current_y(prometheus_url)
-            G, Y = calculate_keys_to_generate(L, T, current_S, y)
             if G == 0:
                 logger.info("Достаточно ключей в буфере.")
                 break

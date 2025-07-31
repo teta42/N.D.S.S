@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: key-generator-monitor
+  namespace: monitoring  # где установлен Prometheus
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: key-generator
+  podMetricsEndpoints:
+    - path: /metrics
+      port: metrics
+      interval: 1s
