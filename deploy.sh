@@ -49,9 +49,6 @@ helm upgrade --install my-redis oci://registry-1.docker.io/bitnamicharts/redis \
   --namespace redis \
   --create-namespace
 
-# HPA для Redis (по желанию)
-# kubectl apply -f my_redis/KEDA_HPA.yaml
-
 echo "========================= 🐘 Установка PostgreSQL-оператора ========================="
 
 helm upgrade --install postgres-operator postgres-operator-charts/postgres-operator \
@@ -59,12 +56,10 @@ helm upgrade --install postgres-operator postgres-operator-charts/postgres-opera
   --create-namespace
 
 kubectl apply -f postgreSQL/cluster-conf.yaml
-kubectl apply -f postgreSQL/HPA.yaml
 
-echo "========================= 🌐 Настройка Ingress и KEDA ========================="
+echo "========================= 🌐 Настройка Ingress ========================="
 
 kubectl apply -f NIC/ingress_drf.yaml
-kubectl apply -f Promiteus/KEDA_HPA.yaml
 
 echo "========================= Развёртывание центрального генератора ========================="
 
@@ -73,7 +68,6 @@ kubectl apply -f centralized_id_generator/storage/cleanup-cronjob.yaml
 
 docker build -f centralized_id_generator/generator/.dockerfile -t key-generator:latest centralized_id_generator/generator
 kubectl apply -f centralized_id_generator/generator/key_generator_cronjob.yaml
-kubectl apply -f centralized_id_generator/generator/PodMonitor.yaml
 
 echo "========================= 🚀 Развёртывание Приложения ========================="
 
@@ -91,7 +85,9 @@ kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 5000:80 & \
 kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 & \
 kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 & \
 kubectl port-forward -n meili-system svc/meilisearch 7700:7700 & \
-kubectl port-forward -n minio svc/minio 9001:9001 &
+kubectl port-forward -n minio svc/minio 9001:9001 & \
+kubectl port-forward -n redis svc/my-redis-master 6379:6379 & \
+kubectl port-forward -n postgres-operator svc/postgresql-cluster-master 5432:5432 & \
 
 echo "⏳ Подождём 5 секунд для стабилизации портов..."
 sleep 5

@@ -5,41 +5,50 @@ import secrets
 from typing import List, Set, Tuple, Dict
 import os
 import requests
-from prometheus_client import start_http_server, Gauge
+from redis.exceptions import RedisError
 
-y_gauge = Gauge('unique_yield', 'Доля успешных ключей')
 
-def get_current_y(prometheus_url: str) -> float:
+def get_current_y_from_redis(redis_client: redis.Redis) -> float:
     """
-    Получает среднее значение метрики y из Prometheus.
+    Получает значение метрики y из Redis. Если ключ отсутствует, возвращает 0.9.
     """
     try:
-        query = 'avg_over_time(unique_yield[5m])'
-        response = requests.get(f"{prometheus_url}/api/v1/query", params={'query': query})
-        result = response.json()
-        if result['status'] == 'success' and result['data']['result']:
-            return float(result['data']['result'][0]['value'][1])
-        else:
-            logger.warning("Не удалось получить метрику y, используется значение по умолчанию 0.9")
+        value = redis_client.get('metric:y')
+        if value is None:
+            logger.warning("Не найдено значение y в Redis, используется значение по умолчанию 0.9")
             return 0.9
-    except Exception as e:
-        logger.error(f"Ошибка при получении метрики y: {e}")
+        return float(value)
+    except (RedisError, ValueError) as e:
+        logger.error(f"Ошибка при получении метрики y из Redis: {e}")
         return 0.9
+
+def update_y_in_redis(redis_client: redis.Redis, y_value: float) -> None:
+    """
+    Обновляет значение метрики y в Redis.
+    """
+    try:
+        redis_client.set('metric:y', y_value)
+    except RedisError as e:
+        logger.error(f"Ошибка при обновлении метрики y в Redis: {e}")
 
 def get_current_load(prometheus_url: str) -> float:
     """
-    Получает текущее значение нагрузки L из Prometheus.
-    L - количество POST запросов на URL создания заметки.
+    Получает текущее значение нагрузки L (RPS) из Prometheus.
+    L — количество POST-запросов на endpoint создания заметки.
     """
+    query = 'sum(rate(django_http_requests_total_by_view_transport_method_total{view="notes-list", method="POST"}[5m]))'
     try:
-        # PromQL запрос для получения количества POST запросов на создание заметки
-        query = 'sum(rate(django_http_requests_total_by_view_transport_method_total{view="note-list", method="POST"}[5m])) * 300'
-        response = requests.get(f"{prometheus_url}/api/v1/query", params={'query': query})
+        response = requests.get(f"{prometheus_url}api/v1/query", params={'query': query}, timeout=5)
+        if response.status_code != 200:
+            logger.warning(f"Prometheus вернул код {response.status_code}: {response.text}")
+            return 10.0
+
         result = response.json()
+        print(result)
         if result['status'] == 'success' and result['data']['result']:
             return float(result['data']['result'][0]['value'][1])
         else:
-            logger.warning("Не удалось получить метрику L, используется значение по умолчанию 10.0")
+            logger.warning("Метрика L не найдена, используется значение по умолчанию 10.0")
             return 10.0
     except Exception as e:
         logger.error(f"Ошибка при получении метрики L: {e}")
@@ -140,7 +149,6 @@ def check_keys_in_postgres(keys: List[str], db_config: Dict[str, str]) -> List[s
         logger.error(f"Ошибка при проверке ключей в PostgreSQL: {e}")
         raise
 
-
 def check_keys_in_redis(keys: List[str], redis_client: redis.Redis) -> List[str]:
     """
     Проверяет, отсутствуют ли ключи в Redis-множестве used_keys.
@@ -185,9 +193,6 @@ def main():
         # N = int(os.environ['BUFFER_THRESHOLD'])
         MAX_ATTEMPTS = int(os.environ['MAX_ATTEMPTS'])
 
-        # Запуск сервера для метрик
-        start_http_server(8000)
-
         # === Проверка и инициализация множеств в Redis ===
         # buffer_keys — множество
         if not redis_client.exists('buffer_keys'):
@@ -206,8 +211,8 @@ def main():
 
         # Получение L и y из Prometheus
         L = get_current_load(prometheus_url)
-        y = get_current_y(prometheus_url)
-        
+        y = get_current_y_from_redis(redis_client)
+
         G, Y = calculate_keys_to_generate(L, T, current_S, y)
 
         # Проверка количества ключей в буфере
@@ -232,12 +237,19 @@ def main():
             added_count = add_keys_to_buffer(missing_in_redis, redis_client)
             total_success += added_count
 
-            if total_attempted > 0:
-                new_y = total_success / total_attempted
-                y_gauge.set(new_y)
-                logger.info(f"Обновлена метрика y: {new_y}")
+            if total_attempted > 0 and total_success > 0:
+                new_y_raw = total_success / total_attempted
+                min_y = 0.01
+                new_y_clamped = max(new_y_raw, min_y)
+                alpha = 0.3  # степень сглаживания
+
+                smoothed_y = alpha * new_y_clamped + (1 - alpha) * y
+                update_y_in_redis(redis_client, smoothed_y)
+
+                logger.info(f"Обновлена метрика y: raw={new_y_raw:.4f}, clamped={new_y_clamped:.4f}, smoothed={smoothed_y:.4f}, previous={y:.4f}")
             else:
-                logger.warning("Не было попыток генерации, метрика y не обновлена.")
+                logger.info("Недостаточно данных для обновления метрики y (нет успешных ключей).")
+
 
             current_S = redis_client.scard('buffer_keys')
             if current_S >= G:

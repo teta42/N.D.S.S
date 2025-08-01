@@ -46,7 +46,7 @@ spec:
             - name: REDIS_PASSWORD
               value: "your-strong-password"
             - name: PROMETHEUS_URL
-              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/"
             - name: TIME_RESERVE
               value: "300"
             - name: KEY_LENGTH

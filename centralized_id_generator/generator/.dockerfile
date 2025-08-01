@@ -8,6 +8,6 @@ WORKDIR /app
 
 COPY key_generator.py .
 
-RUN pip install --no-cache-dir psycopg2-binary redis loguru prometheus_client requests
+RUN pip install --no-cache-dir psycopg2-binary redis loguru requests
 
 CMD ["python", "key_generator.py"]

@@ -94,18 +94,42 @@ def load_to_min_keys(load: float) -> int:
 
 
 def fetch_keys_from_redis():
+    global LUA_SHA  # важно, чтобы можно было обновить SHA после eval
+
     try:
         now = int(time.time())
         keys = r.evalsha(LUA_SHA, 2, BUFFER_KEY_SET, USED_KEY_ZSET, KEY_BATCH_SIZE, now)
         keys = [key.decode("utf-8") for key in keys]
         if keys:
             for key in keys:
-                l2_cache.put(key)  # потокобезопасно кладём ключи в очередь
+                l2_cache.put(key)
             logger.info(f"🔁 Получено {len(keys)} ключей из Redis и добавлено в L2-кэш.")
         else:
             logger.warning("⚠️ Redis не вернул ни одного ключа. Возможно, буфер пуст.")
-    except redis.RedisError as e:
-        logger.error(f"❌ Ошибка при выполнении Lua-скрипта Redis: {e}")
+
+    except redis.exceptions.ResponseError as e:
+        if "NOSCRIPT" in str(e):
+            logger.warning("🔁 Lua-скрипт не найден в Redis. Перезагружаем скрипт через EVAL...")
+            try:
+                now = int(time.time())
+                keys = r.eval(LUA_SCRIPT, 2, BUFFER_KEY_SET, USED_KEY_ZSET, KEY_BATCH_SIZE, now)
+                keys = [key.decode("utf-8") for key in keys]
+                if keys:
+                    for key in keys:
+                        l2_cache.put(key)
+                    logger.info(f"✅ Lua-скрипт выполнен через EVAL. Добавлено {len(keys)} ключей в L2-кэш.")
+                else:
+                    logger.warning("⚠️ Redis не вернул ни одного ключа даже после EVAL.")
+
+                LUA_SHA = r.script_load(LUA_SCRIPT)
+                logger.info("📦 Lua-скрипт перезагружен и SHA обновлён.")
+
+            except Exception as inner_e:
+                logger.error(f"💥 Ошибка при выполнении Lua-скрипта через EVAL: {inner_e}")
+        else:
+            logger.error(f"❌ Ошибка при выполнении Lua-скрипта Redis: {e}")
+    except Exception as e:
+        logger.error(f"💥 Неожиданная ошибка при выполнении Lua-скрипта: {e}")
 
 
 def l2_background_watcher():

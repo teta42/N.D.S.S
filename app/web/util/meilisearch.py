@@ -26,7 +26,7 @@ def create_meilisearch_client() -> meilisearch.Client:
         raise ValueError("MEILISEARCH_URL is required")
 
     try:
-        client = meilisearch.Client(url, api_key)
+        client = meilisearch.Client(url, api_key, timeout=15)
         logger.info("Meilisearch client successfully created.")
         return client
     except Exception as e:
