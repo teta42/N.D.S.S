@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: celery-scaler
+spec:
+  scaleTargetRef:
+    name: celery-worker
+  pollingInterval: 5
+  cooldownPeriod: 15
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: redis
+      metadata:
+        address: my-redis-master.redis.svc.cluster.local:6379
+        listName: celery
+        listLength: "5"
+        password: your-strong-password

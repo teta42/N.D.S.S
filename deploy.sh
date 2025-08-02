@@ -78,6 +78,7 @@ kubectl apply -f app/secret.yaml
 kubectl apply -f app/app.yaml
 kubectl apply -f app/ServiceMonitor.yaml
 kubectl apply -f celery/celery-worker-deployment.yaml
+kubectl apply -f celery/KEDA_Celery.yaml
 
 echo "========================= 🚪 Port-forwarding сервисов ========================="
 
