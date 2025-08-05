@@ -75,6 +75,11 @@ See [`README.en.md`](README.en.md)
 - Helm 3
 - `kubectl` с нужным контекстом
 
+### 📦 Конфигурация
+
+Перед запуском приложения необходимо создать файл `.env` с необходимыми переменными окружения.
+Пример файла можно найти в `.env.template`.
+
 ### 📦 Сборка backend-контейнера
 
 ```bash
@@ -88,6 +93,20 @@ docker build -f web.dockerfile -t drf-app:latest .
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
+### 🔐 Секреты
+
+Все чувствительные данные хранятся в Kubernetes секретах:
+- `minio-secret` - учетные данные MinIO
+- `redis-secret` - пароль Redis
+- `meilisearch-secret` - API ключ Meilisearch
+- `postgres-app-secret` - учетные данные PostgreSQL для приложения
+
+При необходимости, секреты можно обновить в соответствующих файлах:
+- `app/minio-secret.yaml`
+- `app/redis-secret.yaml`
+- `app/secret.yaml`
+- `app/postgres-app-secret.yaml`
 
 ---
 

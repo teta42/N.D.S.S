@@ -44,7 +44,10 @@ spec:
             - name: REDIS_DB
               value: "0"
             - name: REDIS_PASSWORD
-              value: "your-strong-password"
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
             - name: PROMETHEUS_URL
               value: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/"
             - name: TIME_RESERVE
@@ -53,4 +56,16 @@ spec:
               value: "5"
             - name: MAX_ATTEMPTS
               value: "5"
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: MINIO_ROOT_USER
+                  optional: false
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: MINIO_ROOT_PASSWORD
+                  optional: false
           restartPolicy: OnFailure

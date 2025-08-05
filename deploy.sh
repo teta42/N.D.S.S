@@ -4,6 +4,29 @@
 # Завершать все background-процессы при выходе из скрипта
 #trap 'echo "🧹 Завершаем background-процессы..."; kill $(jobs -p)' EXIT
 
+echo "========================= 🧾 Проверка и создание namespace ========================="
+
+# Проверка и создание namespace для monitoring
+kubectl get namespace monitoring > /dev/null 2>&1 || kubectl create namespace monitoring
+
+# Проверка и создание namespace для ingress-nginx
+kubectl get namespace ingress-nginx > /dev/null 2>&1 || kubectl create namespace ingress-nginx
+
+# Проверка и создание namespace для meili-system
+kubectl get namespace meili-system > /dev/null 2>&1 || kubectl create namespace meili-system
+
+# Проверка и создание namespace для minio
+kubectl get namespace minio > /dev/null 2>&1 || kubectl create namespace minio
+
+# Проверка и создание namespace для redis
+kubectl get namespace redis > /dev/null 2>&1 || kubectl create namespace redis
+
+# Проверка и создание namespace для postgres-operator
+kubectl get namespace postgres-operator > /dev/null 2>&1 || kubectl create namespace postgres-operator
+
+# Проверка и создание namespace для loki
+kubectl get namespace loki > /dev/null 2>&1 || kubectl create namespace loki
+
 echo "========================= 🔧 Установка Helm чартов ========================="
 
 # Установка kube-prometheus-stack
@@ -33,6 +56,8 @@ kubectl apply -f meilisearch/ServiceMonitor.yaml
 
 echo "========================= 🗄️ Установка MinIO ========================="
 
+kubectl apply -f MiniO/namespace.yaml
+kubectl apply -f app/minio-secret.yaml
 kubectl apply -f MiniO/minio_conf.yaml
 
 echo "========================= 📦 Установка Loki ========================="
@@ -49,12 +74,23 @@ helm upgrade --install my-redis oci://registry-1.docker.io/bitnamicharts/redis \
   --namespace redis \
   --create-namespace
 
+kubectl apply -f app/redis-secret.yaml
+
+# Копирование секретов в default namespace
+echo "========================= 📋 Копирование секретов в default namespace ========================="
+kubectl get secret redis-secret -n redis -o yaml | sed 's/namespace: redis/namespace: default/' | kubectl apply -f -
+kubectl get secret minio-secret -n minio -o yaml | sed 's/namespace: minio/namespace: default/' | kubectl apply -f -
+kubectl get secret meilisearch-secret -n meili-system -o yaml | sed 's/namespace: meili-system/namespace: default/' | kubectl apply -f -
+# Для postgresql-secret имя может отличаться, проверим и скопируем его
+kubectl get secret root.postgresql-cluster.credentials.postgresql.acid.zalan.do -n postgres-operator -o yaml | sed 's/namespace: postgres-operator/namespace: default/' | kubectl apply -f -
+
 echo "========================= 🐘 Установка PostgreSQL-оператора ========================="
 
 helm upgrade --install postgres-operator postgres-operator-charts/postgres-operator \
   --namespace postgres-operator \
   --create-namespace
 
+kubectl apply -f app/postgres-app-secret.yaml
 kubectl apply -f postgreSQL/cluster-conf.yaml
 
 echo "========================= 🌐 Настройка Ingress ========================="
@@ -88,7 +124,7 @@ kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:909
 kubectl port-forward -n meili-system svc/meilisearch 7700:7700 & \
 kubectl port-forward -n minio svc/minio 9001:9001 & \
 kubectl port-forward -n redis svc/my-redis-master 6379:6379 & \
-kubectl port-forward -n postgres-operator svc/postgresql-cluster-master 5432:5432 & \
+kubectl port-forward -n postgres-operator svc/postgresql-cluster-master 5432:5432 &
 
 echo "⏳ Подождём 5 секунд для стабилизации портов..."
 sleep 5

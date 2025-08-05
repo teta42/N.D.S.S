@@ -1,9 +1,4 @@
-# values.yaml
-
-## Глобальные параметры
 global:
-  redis:
-    password: "your-strong-password"
   storageClass: "standard"
 
 
@@ -12,7 +7,10 @@ architecture: replication
 ## Аутентификация
 auth:
   enabled: true
-  password: "your-strong-password" 
+  password: ""
+  existingSecret: "redis-secret"
+  existingSecretPasswordKey: "REDIS_PASSWORD"
+
 
 ## Конфигурация мастера
 master:

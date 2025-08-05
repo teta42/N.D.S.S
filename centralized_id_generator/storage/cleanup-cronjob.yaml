@@ -11,15 +11,13 @@ spec:
           containers:
           - name: cleanup
             image: redis-cleaner:latest
+            imagePullPolicy: IfNotPresent
             env:
-            - name: REDIS_HOST
-              value: "my-redis-master.redis.svc.cluster.local"
-            - name: REDIS_PORT
-              value: "6379"
-            - name: REDIS_DB
-              value: "0"
-            - name: REDIS_PASSWORD
-              value: "your-strong-password"
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_URL
             - name: USED_KEYS_SET
               value: "used_keys"
             - name: EXPIRE_MINUTES

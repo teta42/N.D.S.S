@@ -13,7 +13,7 @@ spec:
   volume:
     size: 1Gi
   numberOfInstances: 2
-  users: #TODO Поставить пароли пользователям и хранить их в secret
+  users: # Пароли пользователей устанавливаются через секреты
     zalando:  # database owner
     - superuser
     - createdb
@@ -21,6 +21,8 @@ spec:
     - superuser
     - createdb
     foo_user: []  # role for application foo
+  # Используем секрет postgres-app-secret для установки пароля пользователя root
+  # который будет использоваться приложением
   databases:
     foo: zalando  # dbname: owner
     ndss: root

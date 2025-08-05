@@ -3,26 +3,28 @@ import redis
 from threading import Thread
 from prettytable import PrettyTable
 from datetime import datetime
+import os
 
 # Глобальные конфигурации (вместо аргументов командной строки)
+# Passwords should be set via environment variables
 GLOBAL_CONFIG = {
-    "REDIS_MASTER": {
-        "host": "localhost",
-        "port": 6379,
-        "password": "your-strong-password",
-        "db": 0
-    },
-    "REDIS_REPLICA": {
-        "host": "localhost",
-        "port": 8379,
-        "password": "your-strong-password",
-        "db": 0
-    },
-    "TEST_DURATION": 60,  # Длительность теста в секундах
-    "WRITE_THREADS": 5,   # Количество потоков для записи
-    "READ_THREADS": 10,   # Количество потоков для чтения
-    "KEY_PREFIX": "stress_test",
-    "DATA_SIZE": 1024     # Размер данных в байтах
+  "REDIS_MASTER": {
+    "host": "localhost",
+    "port": 6379,
+    "password": os.environ.get("REDIS_MASTER_PASSWORD", "your-strong-password"),
+    "db": 0
+  },
+  "REDIS_REPLICA": {
+    "host": "localhost",
+    "port": 8379,
+    "password": os.environ.get("REDIS_REPLICA_PASSWORD", "your-strong-password"),
+    "db": 0
+  },
+  "TEST_DURATION": 60,  # Длительность теста в секундах
+  "WRITE_THREADS": 5,   # Количество потоков для записи
+  "READ_THREADS": 10,   # Количество потоков для чтения
+  "KEY_PREFIX": "stress_test",
+  "DATA_SIZE": 1024     # Размер данных в байтах
 }
 
 # Глобальные результаты

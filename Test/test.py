@@ -1,9 +1,10 @@
 import requests
 import threading
 import time
+import os
 
 # ==== Конфигурация ====
-URL = "http://app.localdev.me:5000/time/"  # Замени на нужный URL
+URL = os.environ.get("TEST_URL", "http://app.localdev.me:5000/time/")  # Замени на нужный URL
 REQUESTS_PER_THREAD = 100
 NUM_THREADS = 10  # Сколько потоков (параллельных клиентов)
 DELAY_BETWEEN_REQUESTS = 1  # Задержка между запросами в секундах (можно оставить 0)

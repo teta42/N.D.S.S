@@ -16,7 +16,7 @@ spec:
     - interval: 30s
       path: /metrics
       # Убедитесь, что порт называется правильно
-      port: http  # см. ниже, нужно изменить!
+      port: http
   namespaceSelector:
     matchNames:
       - meili-system

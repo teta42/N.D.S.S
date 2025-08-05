@@ -8,12 +8,12 @@ import queue
 import requests
 
 # === Конфигурация из переменных окружения (настраиваются через YAML манифест в Kubernetes) ===
-REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0")
 KEY_BATCH_SIZE = int(os.environ.get("KEY_BATCH_SIZE", 20))         # сколько ключей брать за раз из Redis
 BUFFER_KEY_SET = os.environ.get("BUFFER_KEY_SET", "buffer_keys")  # имя множества-буфера в Redis
 USED_KEY_ZSET = os.environ.get("USED_KEY_ZSET", "used_keys")      # имя сортированного множества для выданных ключей
-FLASK_PORT = int(os.environ.get("FLASK_PORT", 8000))              # порт, на котором работает Flask-сервер
-PROMETHEUS_URL = os.environ.get("PROMETHEUS_URL")                  # URL Prometheus (например http://prometheus:9090)
+FLASK_PORT = int(os.environ.get("FLASK_PORT", 8500))              # порт, на котором работает Flask-сервер
+PROMETHEUS_URL = os.environ.get("PROMETHEUS_URL", "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/")  # URL Prometheus (например http://prometheus:9090)
 
 # === Подключение к Redis ===
 r = redis.Redis.from_url(REDIS_URL)

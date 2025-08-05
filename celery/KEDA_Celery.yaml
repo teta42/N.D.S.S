@@ -15,4 +15,7 @@ spec:
         address: my-redis-master.redis.svc.cluster.local:6379
         listName: celery
         listLength: "5"
-        password: your-strong-password
+        passwordFrom:
+          secretKeyRef:
+            name: redis-secret
+            key: REDIS_PASSWORD

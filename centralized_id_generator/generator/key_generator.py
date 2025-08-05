@@ -60,10 +60,10 @@ def init_redis() -> redis.Redis:
     """
     try:
         redis_config = {
-            'host': os.environ['REDIS_HOST'],
-            'port': os.environ['REDIS_PORT'],
-            'db': int(os.environ['REDIS_DB']),
-            'password' : os.environ['REDIS_PASSWORD']
+            'host': os.environ.get('REDIS_HOST', 'my-redis-master.redis.svc.cluster.local'),
+            'port': int(os.environ.get('REDIS_PORT', '6379')),
+            'db': int(os.environ.get('REDIS_DB', '0')),
+            'password': os.environ.get('REDIS_PASSWORD', 'your-strong-password')
         }
         return redis.Redis(**redis_config)
     except Exception as e:
@@ -76,11 +76,11 @@ def init_postgres() -> Dict[str, str]:
     """
     try:
         return {
-            'dbname': os.environ['DB_NAME'],
-            'user': os.environ['DB_USER'],
-            'password': os.environ['DB_PASSWORD'],
-            'host': os.environ['DB_HOST'],
-            'port': os.environ['DB_PORT']
+            'dbname': os.environ.get('DB_NAME', 'postgres'),
+            'user': os.environ.get('DB_USER', 'root'),
+            'password': os.environ.get('DB_PASSWORD', 'your-postgres-password'),
+            'host': os.environ.get('DB_HOST', 'postgresql-cluster-master.postgres-operator.svc.cluster.local'),
+            'port': os.environ.get('DB_PORT', '5432')
         }
     except Exception as e:
         logger.error(f"Ошибка при инициализации PostgreSQL: {e}")

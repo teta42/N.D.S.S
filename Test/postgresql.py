@@ -7,16 +7,18 @@ from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+import os
 
 console = Console()
 
 # Конфигурация подключения к БД
+# Password should be set via environment variable
 MASTER_CONFIG = {
-    "dbname": "postgres",
-    "user": "postgres",
-    "password": "qtKOJ9Ah9AzP8VVo8hhm4NTZ8Jd9MPBcehicosVl1QjXZE0GJO1k1YweLAbMZ4Hx",
-    "host": "127.0.0.1",  # мастер
-    "port": "5432"
+  "dbname": "postgres",
+  "user": "postgres",
+  "password": os.environ.get("TEST_POSTGRES_PASSWORD", "qtKOJ9Ah9AzP8VVo8hhm4NTZ8Jd9MPBcehicosVl1QjXZE0GJO1k1YweLAbMZ4Hx"),
+  "host": "127.0.0.1",  # мастер
+  "port": "5432"
 }
 
 REPLICA_CONFIG = {

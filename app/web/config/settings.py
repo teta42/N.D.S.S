@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!ph3ope1m4d#pf1%7n@7j=ho3qei68iun#)&s#v)*2zq+dtu+('
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-!ph3ope1m4d#pf1%7n@7j=ho3qei68iun#)&s#v)*2zq+dtu+(')
 
 # SECURITY WARNING: don't run with debug turned on in production!F
 DEBUG = True
@@ -233,8 +233,8 @@ AWS_S3_ADDRESSING_STYLE = "path"  # обязательно для MinIO
 AWS_S3_VERIFY = False 
 
 AWS_S3_ENDPOINT_URL = "http://minio.minio.svc.cluster.local:9000"  # URL твоего MinIO
-AWS_ACCESS_KEY_ID = "minioadmin"
-AWS_SECRET_ACCESS_KEY = "minioadmin"
+AWS_ACCESS_KEY_ID = os.environ.get('MINIO_ROOT_USER', 'minioadmin')
+AWS_SECRET_ACCESS_KEY = os.environ.get('MINIO_ROOT_PASSWORD', 'minioadmin')
 AWS_STORAGE_BUCKET_NAME = "content"
 
 AWS_S3_FILE_OVERWRITE = True
@@ -248,34 +248,30 @@ MEILISEARCH_INDEX_NAME = "notes"
 
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+      "BACKEND": "django_redis.cache.RedisCache",
+      "LOCATION": os.environ.get('REDIS_URL', 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0'),
+      "OPTIONS": {
+        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+      }
     },
     "write_cache": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+      "BACKEND": "django_redis.cache.RedisCache",
+      "LOCATION": os.environ.get('REDIS_URL', 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0'),
+      "OPTIONS": {
+        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+      }
     },
     "read_cache": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:your-strong-password@my-redis-replicas.redis.svc.cluster.local:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+      "BACKEND": "django_redis.cache.RedisCache",
+      "LOCATION": os.environ.get('REDIS_REPLICA_URL', 'redis://:your-strong-password@my-redis-replicas.redis.svc.cluster.local:6379/0'),
+      "OPTIONS": {
+        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+      }
     }
 }
 
 
 # Redis как брокер
-CELERY_BROKER_URL = 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0'
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0')
 
-# Результаты задач (можно временно не использовать)
-CELERY_RESULT_BACKEND = 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/1'
-
-# Таймзона
 CELERY_TIMEZONE = 'UTC'

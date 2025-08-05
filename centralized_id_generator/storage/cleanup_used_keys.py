@@ -4,19 +4,27 @@ import os
 from loguru import logger
 
 # Параметры подключения из переменных окружения
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_DB = int(os.getenv("REDIS_DB", 0))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+REDIS_URL = os.getenv("REDIS_URL", 'redis://:your-strong-password@my-redis-master.redis.svc.cluster.local:6379/0')
 USED_KEYS_SET = os.getenv("USED_KEYS_SET", "used_keys")
-EXPIRE_MINUTES = int(os.getenv("EXPIRE_MINUTES", 15))
+
+# Обработка EXPIRE_MINUTES с обработкой ошибок
+try:
+    EXPIRE_MINUTES = int(os.getenv("EXPIRE_MINUTES", 15))
+except ValueError:
+    logger.warning("EXPIRE_MINUTES не является числом, используется значение по умолчанию 15")
+    EXPIRE_MINUTES = 15
 
 # Настройка логирования
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = os.getenv("LOG_FILE", "/var/log/cleanup.log")
 
 logger.remove()
-logger.add(LOG_FILE, rotation="1 MB", retention="7 days", level=LOG_LEVEL)
+# Попытка добавить файловый логгер, если директория доступна
+try:
+    logger.add(LOG_FILE, rotation="1 MB", retention="7 days", level=LOG_LEVEL)
+except Exception as e:
+    logger.warning(f"Не удалось настроить файловый логгер: {e}. Логи будут только в stdout.")
+
 logger.add(lambda msg: print(msg, end=""), level=LOG_LEVEL)
 
 def main():
@@ -26,26 +34,27 @@ def main():
     Ключи считаются устаревшими, если их score (временная метка UNIX) меньше чем N минут назад.
     
     Используемые переменные окружения:
-    - REDIS_HOST: хост Redis (по умолчанию 'localhost')
-    - REDIS_PORT: порт Redis (по умолчанию 6379)
-    - REDIS_DB: номер базы (по умолчанию 0)
-    - REDIS_PASSWORD: пароль (по умолчанию None)
+    - REDIS_URL - REDIS_URL
     - USED_KEYS_SET: имя множества (по умолчанию 'used_keys')
     - EXPIRE_MINUTES: порог устаревания в минутах (по умолчанию 15)
     - LOG_FILE: путь к лог-файлу (по умолчанию '/var/log/cleanup.log')
     - LOG_LEVEL: уровень логирования (по умолчанию 'INFO')
     """
     logger.info("🚀 Starting cleanup script")
+    
+    # Проверка наличия REDIS_URL
+    if not REDIS_URL:
+        logger.error("REDIS_URL не задан. Выход.")
+        return
+    
+    # Log all environment variables for debugging
+    logger.debug("All environment variables:")
+    for key, value in os.environ.items():
+        logger.debug(f"  {key}: {value}")
 
     try:
-        r = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=REDIS_DB,
-            password=REDIS_PASSWORD,
-            socket_timeout=5
-        )
-        logger.info(f"🔗 Connected to Redis at {REDIS_HOST}:{REDIS_PORT}, DB {REDIS_DB}")
+        r = redis.from_url(REDIS_URL)
+        logger.info(f"🔗 Connected to Redis")
     except redis.RedisError as e:
         logger.error(f"❌ Redis connection failed: {e}")
         return

@@ -19,6 +19,49 @@ spec:
           image: drf-app:latest
           command: ["celery"]
           args: ["-A", "config", "worker", "--loglevel=info"]
+          env:
+          - name: POSTGRES_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: root.postgresql-cluster.credentials.postgresql.acid.zalan.do
+                key: username
+                optional: false
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: root.postgresql-cluster.credentials.postgresql.acid.zalan.do
+                key: password
+                optional: false
+          - name: MEILI_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: meilisearch-secret
+                key: MEILI_MASTER_KEY
+                optional: false
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: MINIO_ROOT_USER
+                optional: false
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: MINIO_ROOT_PASSWORD
+                optional: false
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: redis-secret
+                key: REDIS_URL
+                optional: false
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-secret
+                key: REDIS_PASSWORD
+                optional: false
           resources:
             limits:
               memory: "512Mi"

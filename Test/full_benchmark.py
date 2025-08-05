@@ -5,8 +5,9 @@ import logging
 import requests
 from loguru import logger
 from datetime import datetime, timedelta
+import os
 
-BASE_URL = "http://localhost:5000/api"
+BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:5000/api")
 USERNAME = "user_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 PASSWORD = "testpassword123"
 
